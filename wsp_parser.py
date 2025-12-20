@@ -8,6 +8,7 @@ class Instance:
         self.num_constraints = num_constraints
         
         # User ID -> list of authorized Step IDs
+        # Key presence implies explicit mention in file.
         self.authorizations = {} 
         
         # List of (step1, step2) tuples
@@ -34,18 +35,32 @@ class Instance:
 def read_file(filename):
     """
     Parses the WSP input file and returns an Instance object.
+    Strictly follows implicit permission rules:
+    - Users mentioned in Authorisations are restricted to those steps.
+    - Users NOT mentioned are authorized for ALL steps.
     """
     with open(filename, 'r') as f:
         lines = f.readlines()
         
     instance = None
     
-    # Regex Patterns (Case Insensitive)
+
+    # Single line header pattern
     header_pattern = re.compile(r'#Steps:\s*(\d+),\s*#Users:\s*(\d+),\s*#Constraints:\s*(\d+)', re.IGNORECASE)
+    # Multi-line patterns
+    steps_pattern = re.compile(r'#Steps:\s*(\d+)', re.IGNORECASE)
+    users_pattern = re.compile(r'#Users:\s*(\d+)', re.IGNORECASE)
+    const_pattern = re.compile(r'#Constraints:\s*(\d+)', re.IGNORECASE)
     
-    # sID and uID extraction helpers
+    n_steps = None
+    n_users = None
+
+    n_const = None
+    
+    # helper
     def parse_ids(text, prefix):
-        # findall returns strings, convert to int and 0-index
+        if not text:
+            return []
         pattern = fr'{prefix}(\d+)'
         return [int(val) - 1 for val in re.findall(pattern, text, re.IGNORECASE)]
 
@@ -58,36 +73,63 @@ def read_file(filename):
     
     for line in lines:
         line = line.strip()
-        if not line:
+        if not line or line.startswith('%'):
             continue
             
-        # Parse Header if not already done
+        # Parse Header(s)
         if instance is None:
+            # Try single line match
             match = header_pattern.match(line)
             if match:
                 n_steps = int(match.group(1))
                 n_users = int(match.group(2))
                 n_const = int(match.group(3))
                 instance = Instance(n_steps, n_users, n_const)
-            continue
+                continue
             
-        # Parse Constraints
+            # Try partial matches
+            if n_steps is None:
+                m = steps_pattern.match(line)
+                if m: n_steps = int(m.group(1))
+            if n_users is None:
+                m = users_pattern.match(line)
+                if m: n_users = int(m.group(1))
+            if n_const is None:
+                m = const_pattern.match(line)
+                if m: n_const = int(m.group(1))
+            
+            # Check if we have all needed to create instance
+            if n_steps is not None and n_users is not None and n_const is not None:
+                instance = Instance(n_steps, n_users, n_const)
+            
+            # If we just found a header component, skip to next line to avoid misparsing
+            if steps_pattern.match(line) or users_pattern.match(line) or const_pattern.match(line):
+                continue
         
-        # Authorizations: u[ID] s[ID] ...
+        # If instance is STILL None (meaning we haven't finished header), skip content lines until we do?
+        # Or maybe the file has interleaved headers? Unlikely.
+        # But wait, if we create the instance on the line we find the last component, we might then process the same line as a constraint?
+        # The 'continue' above handles that.
+        
+        if instance is None:
+             # Safety: if we somehow reach here without an instance, we can't store constraints.
+             # but we should keep reading in case headers follow.
+             continue
+
+        # 1. Authorizations
         match = auth_pattern.match(line)
         if match:
             u_id = int(match.group(1)) - 1
             remainder = match.group(2)
             steps = parse_ids(remainder, 's')
             
-            # If user has multiple lines, extend; otherwise set. 
-            # Assuming input lines are unique per user or cumulative.
+            # Record user exists in authorizations dict
             if u_id not in instance.authorizations:
                 instance.authorizations[u_id] = []
             instance.authorizations[u_id].extend(steps)
             continue
             
-        # Separation-of-duty: s[ID] s[ID]
+        # 2. Separation-of-duty
         match = sod_pattern.match(line)
         if match:
             s1 = int(match.group(1)) - 1
@@ -95,7 +137,7 @@ def read_file(filename):
             instance.separation_duty.append((s1, s2))
             continue
             
-        # Binding-of-duty: s[ID] s[ID]
+        # 3. Binding-of-duty
         match = bod_pattern.match(line)
         if match:
             s1 = int(match.group(1)) - 1
@@ -103,7 +145,7 @@ def read_file(filename):
             instance.binding_duty.append((s1, s2))
             continue
             
-        # At-most-k: [K] s[ID] ...
+        # 4. At-most-k
         match = amk_pattern.match(line)
         if match:
             k = int(match.group(1))
@@ -112,22 +154,18 @@ def read_file(filename):
             instance.at_most_k.append((k, steps))
             continue
             
-        # One-team: s[ID]... (u[ID] ...) ...
+        # 5. One-team
         match = ot_pattern.match(line)
         if match:
             content = match.group(1)
-            # The line structure is: steps part ... (team1) (team2) ...
-            # We can split by '(' to separate the initial steps part from the team parts.
+            # Format: s1 s2 ... (u1 u2) (u3 u4) ...
             parts = content.split('(')
             
-            # First part contains steps
             steps_part = parts[0]
             steps = parse_ids(steps_part, 's')
             
             teams = []
             for team_part in parts[1:]:
-                # team_part looks like "u1 u2) ..." or "u1 u2)"
-                # We need to extract users before the closing ')'
                 if ')' in team_part:
                     users_str = team_part.split(')')[0]
                     team_users = parse_ids(users_str, 'u')
@@ -137,32 +175,3 @@ def read_file(filename):
             continue
             
     return instance
-
-if __name__ == "__main__":
-    # Small test logic
-    import sys
-    import os
-    
-    # Create a dummy file if provided argument is 'test'
-    if len(sys.argv) > 1 and sys.argv[1] == 'test':
-        test_content = """#Steps: 5, #Users: 4, #Constraints: 5
-Authorisations u1 s1 s2
-Authorisations u2 s2 s3
-Separation-of-duty s1 s2
-Binding-of-duty s2 s3
-At-most-k 2 s1 s2 s3
-One-team s4 s5 (u1 u2) (u3 u4)
-"""
-        with open("test.wsp", "w") as f:
-            f.write(test_content)
-        
-        parsed = read_file("test.wsp")
-        print("Parsed Instance:", parsed)
-        print("Auths:", parsed.authorizations)
-        print("SoD:", parsed.separation_duty)
-        print("BoD:", parsed.binding_duty)
-        print("AMK:", parsed.at_most_k)
-        print("OneTeam:", parsed.one_team)
-        
-        # Cleanup
-        os.remove("test.wsp")
