@@ -1,0 +1,717 @@
+#Steps: 60
+#Users: 500
+#Constraints: 714
+Authorisations u1 s7 s8 s18 s21 s30 s34 s38 s40 s54 s58
+Authorisations u2 s5 s13 s16 s24 s26 s27 s34 s36 s41 s42 s47 s60
+Authorisations u3 s1 s19 s28 s38 s43 s46 s54 s56
+Authorisations u4 s3 s8 s17 s26 s33 s35 s43 s54 s55 s56
+Authorisations u5 s2 s12 s13 s25 s30 s32 s50 s57
+Authorisations u6 s14 s15 s17 s19 s20 s22 s31 s41 s48 s50 s52 s56 s58 s60
+Authorisations u7 s2 s6 s7 s13 s14 s15 s23 s31 s33 s34 s40 s43 s51 s59
+Authorisations u8 s5 s6 s7 s8 s13 s16 s23 s31 s32 s33 s37 s38 s54 s55
+Authorisations u9 s2 s5 s8 s9 s10 s14 s18 s20 s28 s29 s34 s36 s59
+Authorisations u10 s3 s5 s13 s23 s25 s31 s40 s44 s46
+Authorisations u11 s11 s18 s22 s25 s30 s43 s44 s46 s51 s57
+Authorisations u12 s2 s6 s8 s10 s11 s14 s20 s25 s28 s31 s46 s51 s60
+Authorisations u13 s4 s9 s12 s19 s35 s47 s50 s54 s55
+Authorisations u14 s2 s3 s5 s6 s10 s11 s14 s15 s28 s31 s38 s42 s43 s46 s51 s53
+Authorisations u15 s11 s16 s19 s22 s26 s34 s39 s45 s47
+Authorisations u16 s7 s16 s31 s36 s44 s48 s53 s60
+Authorisations u17 s4 s16 s17 s19 s20 s26 s28 s50 s54 s55
+Authorisations u18 s20 s21 s38 s41 s48 s56 s60
+Authorisations u19 s11 s13 s15 s17 s18 s21 s28 s31 s32 s35 s38 s49 s53 s60
+Authorisations u20 s1 s5 s9 s13 s14 s16 s20 s22 s39 s52
+Authorisations u21 s3 s5 s8 s11 s19 s21 s38 s40 s47 s48 s53
+Authorisations u22 s6 s13 s19 s26 s42 s52 s53 s57
+Authorisations u23 s1 s9 s12 s14 s15 s16 s26 s28 s33 s34 s44 s46 s48 s52 s60
+Authorisations u24 s5 s6 s8 s12 s17 s24 s27 s32 s35 s40 s42 s45 s46 s51 s53 s60
+Authorisations u25 s2 s4 s10 s13 s32 s34 s38 s47 s49 s51 s55
+Authorisations u26 s7 s11 s17 s27 s43 s45 s47 s49 s51 s53 s54 s55 s57
+Authorisations u27 s2 s8 s11 s15 s16 s17 s20 s26 s27 s30 s36 s39 s42 s43 s45 s49 s54 s57
+Authorisations u28 s9 s16 s17 s30 s39 s42 s43 s44 s45 s47 s49 s50 s51 s55 s56 s57 s59 s60
+Authorisations u29 s4 s18 s56 s57
+Authorisations u30 s17 s22 s25 s32 s44 s48 s54 s55 s56 s57
+Authorisations u31 s4 s9 s12 s30 s41 s43 s44 s45 s50 s54
+Authorisations u32 s1 s2 s11 s16 s19 s27 s36 s44 s47 s53 s54 s56
+Authorisations u33 s6 s8 s9 s27 s34 s52 s54
+Authorisations u34 s7 s10 s30 s38 s39 s42 s43 s44 s48 s54 s55 s56 s59
+Authorisations u35 s8 s10 s14 s16 s18 s28 s35 s42 s45 s47
+Authorisations u36 s2 s4 s5 s27 s31 s34 s42 s53 s55 s57 s58 s60
+Authorisations u37 s4 s12 s16 s21 s24 s32 s47 s49 s50 s52
+Authorisations u38 s7 s13 s20 s21 s24 s30 s34 s37 s38 s50 s55
+Authorisations u39 s1 s41 s44 s45 s50 s53 s56 s59
+Authorisations u40 s7 s9 s11 s18 s19 s24 s32 s48 s49 s56 s57 s58 s59
+Authorisations u41 s2 s8 s11 s13 s16 s17 s23 s27 s36 s42 s47
+Authorisations u42 s9 s11 s16 s17 s23 s27 s29 s32 s33 s35 s43 s53
+Authorisations u43 s6 s11 s14 s19 s20 s26 s29 s37 s46 s51 s56 s58
+Authorisations u44 s5 s11 s21 s26 s27 s36 s38 s40 s43 s45 s47 s59 s60
+Authorisations u45 s2 s7 s10 s15 s16 s21 s24 s35 s42 s51 s53 s57 s59
+Authorisations u46 s1 s3 s10 s15 s40 s42 s52 s59
+Authorisations u47 s8 s9 s14 s16 s18 s30 s32 s37 s38 s41 s43 s45
+Authorisations u48 s9 s16 s17 s20 s21 s27 s33 s45 s51
+Authorisations u49 s1 s10 s12 s13 s15 s22 s29 s30 s40 s42 s50 s52 s58 s59
+Authorisations u50 s2 s5 s6 s9 s16 s20 s22 s23 s24 s28 s31 s34 s46 s47 s51
+Authorisations u51 s2 s9 s25 s26 s31 s36 s38 s44 s55 s56 s58 s59
+Authorisations u52 s4 s5 s10 s16 s21 s24 s28 s33 s34 s38 s46 s47
+Authorisations u53 s16 s18 s19 s20 s26 s29 s31 s32 s36 s45 s54
+Authorisations u54 s7 s9 s15 s20 s25 s40 s44 s46 s57 s59 s60
+Authorisations u55 s2 s15 s19 s25 s29 s41 s52 s53 s54 s56 s59
+Authorisations u56 s11 s16 s19 s26 s28 s30 s36 s40 s50 s55 s58 s60
+Authorisations u57 s6 s10 s11 s15 s17 s18 s19 s20 s27 s30 s41 s56
+Authorisations u58 s6 s18 s25 s27 s29 s34 s45 s49 s51 s53
+Authorisations u59 s1 s4 s13 s15 s17 s20 s22 s23 s28 s29 s35 s38 s42 s43 s47
+Authorisations u60 s1 s25 s27 s32 s34 s35 s38 s39 s40 s54 s59 s60
+Authorisations u61 s2 s7 s10 s20 s26 s35 s40 s45 s54 s58 s59
+Authorisations u62 s1 s9 s28 s31 s44 s45
+Authorisations u63 s2 s5 s8 s14 s15 s21 s27 s31 s34 s42 s53 s54 s55 s56
+Authorisations u64 s13 s16 s26 s30 s36 s37 s46 s48 s50
+Authorisations u65 s6 s8 s9 s15 s18 s19 s24 s29 s34 s37 s42 s48 s54
+Authorisations u66 s3 s9 s10 s12 s15 s23 s27 s30 s33 s40 s42 s51 s57
+Authorisations u67 s7 s15 s16 s19 s22 s27 s51 s55 s59 s60
+Authorisations u68 s10 s12 s14 s18 s23 s25 s29 s40 s45 s50
+Authorisations u69 s9 s10 s22 s25 s40 s43 s50 s52 s59
+Authorisations u70 s12 s14 s25 s29 s32 s35 s47 s50 s53 s54 s57 s60
+Authorisations u71 s2 s8 s12 s18 s20 s24 s27
+Authorisations u72 s5 s10 s17 s19 s24 s25 s27 s31 s32 s36 s37 s43 s57
+Authorisations u73 s6 s14 s20 s25 s30 s31 s37 s48 s51 s57 s59
+Authorisations u74 s3 s11 s14 s19 s23 s28 s34 s40 s42 s46 s51 s53
+Authorisations u75 s3 s11 s19 s23 s27 s29 s32 s38 s46 s55 s56 s59
+Authorisations u76 s2 s8 s10 s12 s13 s14 s21 s31 s35 s36 s39 s40 s46 s52 s57 s58
+Authorisations u77 s3 s5 s8 s9 s36 s40 s42 s44 s50 s54 s56
+Authorisations u78 s7 s23 s25 s43 s44 s50 s52 s55
+Authorisations u79 s7 s8 s9 s11 s12 s14 s18 s33 s39 s51 s53 s54 s55 s60
+Authorisations u80 s10 s12 s13 s18 s25 s27 s32 s33 s35 s37 s43 s46 s50 s51 s52 s56 s60
+Authorisations u81 s3 s6 s7 s10 s15 s27 s30 s35 s39 s45 s52 s55 s57 s58 s59
+Authorisations u82 s3 s7 s9 s21 s22 s25 s37 s40 s42 s45 s46 s47 s52 s53 s54 s58
+Authorisations u83 s2 s6 s10 s26 s32 s37 s38
+Authorisations u84 s7 s15 s23 s26 s34 s41 s58 s59
+Authorisations u85 s24 s31 s35 s38 s44 s45 s47 s52 s55 s59
+Authorisations u86 s2 s7 s10 s12 s16 s28 s30 s31 s32 s36 s40 s42 s48
+Authorisations u87 s2 s10 s19 s22 s23 s26 s29 s37 s41 s44 s48 s50 s53
+Authorisations u88 s15 s19 s21 s24 s27 s28 s30 s33 s39 s41 s46 s49 s51 s52 s59
+Authorisations u89 s1 s14 s17 s31 s41 s43 s48 s55
+Authorisations u90 s5 s9 s15 s26 s27 s29 s34 s38 s43 s46 s48 s59
+Authorisations u91 s13 s16 s19 s22 s24 s30 s32 s38 s42 s51 s53 s55 s59
+Authorisations u92 s1 s11 s21 s23 s24 s29 s30 s32 s34 s36 s38 s43 s46 s48 s50 s52 s57
+Authorisations u93 s3 s6 s7 s9 s31 s32 s35 s40 s45 s46 s49
+Authorisations u94 s1 s3 s5 s8 s17 s19 s26 s50 s53 s60
+Authorisations u95 s1 s13 s14 s17 s22 s27 s30 s31 s35 s45 s55 s57 s59
+Authorisations u96 s1 s6 s9 s14 s16 s20 s24 s27 s28 s29 s30 s33 s35 s42 s43 s57 s59
+Authorisations u97 s5 s6 s9 s12 s14 s18 s19 s24 s29 s30 s33 s38 s41 s43 s45 s49 s53 s57
+Authorisations u98 s1 s4 s9 s12 s15 s22 s25 s27 s33 s37 s38 s40 s41 s45 s47
+Authorisations u99 s7 s10 s11 s12 s22 s27 s28 s31 s32 s34 s39 s41 s44 s46 s48 s51 s57
+Authorisations u100 s1 s7 s9 s30 s36 s39 s47 s50 s58 s59
+Authorisations u101 s1 s3 s5 s16 s19 s20 s21 s28 s35 s39 s41 s42 s43 s46 s48 s55 s56
+Authorisations u102 s7 s8 s12 s16 s19 s20 s21 s31 s32 s34 s41 s44 s47 s51 s57
+Authorisations u103 s4 s6 s7 s11 s16 s17 s30 s34 s35 s37 s46 s48 s50 s52
+Authorisations u104 s5 s10 s12 s13 s28 s34 s36 s49 s51 s53 s56 s58 s59
+Authorisations u105 s2 s3 s6 s18 s21 s36 s60
+Authorisations u106 s1 s3 s4 s5 s11 s19 s25 s26 s38 s42 s55 s57
+Authorisations u107 s1 s4 s21 s26 s36 s39 s44 s45 s50 s52 s53 s59
+Authorisations u108 s2 s4 s5 s7 s12 s13 s17 s18 s19 s20 s32 s38 s41 s50 s59
+Authorisations u109 s4 s7 s16 s18 s22 s24 s30 s33 s36 s48 s54
+Authorisations u110 s6 s8 s20 s32 s34 s38 s42 s53 s55 s58
+Authorisations u111 s4 s6 s8 s9 s19 s21 s40 s49 s51
+Authorisations u112 s6 s8 s12 s18 s25 s26 s37 s38 s48 s50 s53 s55 s56 s57 s60
+Authorisations u113 s5 s7 s9 s13 s17 s19 s32 s34 s49 s51 s60
+Authorisations u114 s2 s3 s8 s20 s22 s25 s41 s42 s47 s48 s55 s58
+Authorisations u115 s13 s14 s17 s18 s26 s31 s33 s34 s35 s37 s38 s42 s46 s58 s59
+Authorisations u116 s7 s10 s16 s18 s19 s21 s27 s36 s38 s40 s57
+Authorisations u117 s5 s9 s10 s15 s18 s28 s32 s33 s40 s49 s55 s56 s57 s60
+Authorisations u118 s2 s3 s5 s11 s12 s14 s15 s19 s31 s34 s39 s49 s56
+Authorisations u119 s1 s2 s8 s11 s14 s16 s32 s36 s43 s47 s49 s52 s54 s55 s56 s57 s58
+Authorisations u120 s6 s20 s23 s28 s29 s34 s35 s38 s39 s44 s50 s55 s59 s60
+Authorisations u121 s3 s5 s8 s11 s17 s18 s21 s24 s32 s36 s42 s48 s53
+Authorisations u122 s8 s27 s48 s52 s54 s57 s58
+Authorisations u123 s15 s26 s41 s49 s50 s52
+Authorisations u124 s3 s7 s13 s16 s20 s24 s26 s31 s37 s39 s41 s52
+Authorisations u125 s8 s20 s21 s22 s27 s39 s42 s44
+Authorisations u126 s4 s8 s10 s18 s20 s31 s38 s43 s45 s60
+Authorisations u127 s2 s14 s17 s20 s21 s25 s26 s28 s33 s42 s43 s44 s50
+Authorisations u128 s2 s7 s10 s17 s22 s23 s31 s32 s34 s36 s37 s45 s47 s57
+Authorisations u129 s3 s5 s8 s12 s15 s18 s20 s22 s23 s26 s33 s35 s42 s44 s48 s49 s54 s58
+Authorisations u130 s1 s2 s6 s15 s18 s20 s24 s35 s40
+Authorisations u131 s4 s5 s16 s18 s20 s27 s29 s30 s31 s46 s48 s53 s54 s55 s56
+Authorisations u132 s10 s13 s27 s28 s29 s51
+Authorisations u133 s4 s16 s17 s22 s34 s36 s38 s42 s45 s54 s60
+Authorisations u134 s3 s14 s26 s36 s41 s45 s48 s52 s58
+Authorisations u135 s2 s10 s14 s17 s20 s22 s24 s25 s27 s29 s31 s44 s46 s53 s54 s57
+Authorisations u136 s2 s8 s9 s13 s16 s29 s32 s36 s49 s51 s55 s56 s57
+Authorisations u137 s8 s9 s11 s13 s14 s28 s35 s36 s40 s55 s60
+Authorisations u138 s3 s12 s13 s15 s18 s19 s20 s26 s34 s35 s40 s49 s51 s52 s53
+Authorisations u139 s7 s12 s13 s24 s25 s44 s46 s52 s54 s57 s59 s60
+Authorisations u140 s3 s13 s14 s16 s17 s23 s28 s33 s37 s43 s44 s48 s53 s55
+Authorisations u141 s1 s8 s10 s20 s21 s27 s34 s35 s36 s41 s46 s47 s50 s55 s56 s58
+Authorisations u142 s1 s6 s13 s18 s19 s33 s45 s47 s59
+Authorisations u143 s10 s16 s21 s39 s42 s43 s46 s54
+Authorisations u144 s5 s8 s13 s16 s36 s40 s55
+Authorisations u145 s2 s3 s9 s10 s15 s17 s18 s20 s33 s34 s36 s58
+Authorisations u146 s6 s8 s12 s16 s19 s21 s26 s33 s39 s49 s51 s54 s57 s59 s60
+Authorisations u147 s2 s7 s8 s17 s20 s23 s24 s33 s34 s38 s40 s43 s56
+Authorisations u148 s4 s8 s15 s21 s22 s23 s29 s31 s35 s36 s41 s42 s50 s53 s60
+Authorisations u149 s4 s7 s11 s14 s26 s36 s37 s46 s59
+Authorisations u150 s2 s6 s8 s9 s10 s18 s23 s26 s28 s36 s37 s38 s42 s45 s48 s51
+Authorisations u151 s1 s6 s32 s39 s40 s41 s49 s56 s58
+Authorisations u152 s1 s2 s3 s7 s10 s14 s18 s27 s31 s37 s38 s39 s40 s42 s45
+Authorisations u153 s5 s8 s9 s17 s19 s27 s30 s38 s47 s53 s60
+Authorisations u154 s10 s33 s34 s42 s43 s45 s54 s59
+Authorisations u155 s11 s12 s15 s17 s20 s24 s29 s32 s38 s39 s46 s52 s53 s58 s59 s60
+Authorisations u156 s3 s4 s16 s20 s40 s44 s48 s50 s51
+Authorisations u157 s6 s12 s19 s25 s32 s36 s39 s40 s50 s51 s55
+Authorisations u158 s2 s4 s8 s12 s14 s19 s23 s27 s28 s35 s36 s47 s48 s59
+Authorisations u159 s12 s22 s28 s32 s34 s35 s36 s47 s53
+Authorisations u160 s11 s12 s19 s28 s32 s44 s45 s46 s50 s56
+Authorisations u161 s8 s10 s16 s21 s25 s27 s30 s32 s33 s36 s37 s39 s40 s41 s47 s56 s59
+Authorisations u162 s1 s4 s11 s16 s20 s27 s32 s36 s45 s60
+Authorisations u163 s3 s17 s19 s29 s32 s33 s34 s36 s42 s44 s45 s49
+Authorisations u164 s3 s4 s6 s15 s20 s23 s28 s33 s36 s39 s43 s46 s47 s49 s52 s56
+Authorisations u165 s2 s5 s10 s12 s13 s18 s19 s22 s24 s28 s39 s45 s46 s52 s55 s59
+Authorisations u166 s15 s16 s24 s26 s33 s38 s52 s54 s59
+Authorisations u167 s2 s3 s6 s10 s12 s13 s29 s31 s39 s49 s53 s54 s58 s59
+Authorisations u168 s5 s7 s11 s12 s13 s14 s15 s16 s17 s24 s26 s38 s41 s43 s45 s47 s48 s53 s55
+Authorisations u169 s3 s17 s19 s33 s35 s46 s48 s49
+Authorisations u170 s27 s31 s37 s40 s53 s59
+Authorisations u171 s4 s6 s9 s13 s16 s17 s20 s28 s33 s35 s37 s39 s40 s41 s48 s49 s50 s51
+Authorisations u172 s3 s5 s9 s14 s16 s21 s41 s49 s51
+Authorisations u173 s6 s9 s22 s26 s28 s29 s36 s38 s39 s41 s48 s53 s57
+Authorisations u174 s2 s9 s10 s12 s19 s20 s24 s29 s35 s36 s44 s45 s46
+Authorisations u175 s4 s15 s16 s19 s20 s50 s51 s52
+Authorisations u176 s3 s20 s22 s23 s24 s36 s39 s46 s47 s53 s60
+Authorisations u177 s3 s7 s10 s14 s21 s24 s53 s54 s55 s60
+Authorisations u178 s3 s5 s19 s21 s22 s23 s26 s27 s29 s35 s47 s55 s60
+Authorisations u179 s12 s13 s14 s20 s21 s22 s25 s35 s48 s53 s55 s57 s59
+Authorisations u180 s13 s14 s17 s22 s23 s33 s38 s44 s46 s54 s57
+Authorisations u181 s18 s20 s22 s36 s37 s44 s47 s50
+Authorisations u182 s9 s16 s17 s19 s23 s25 s26 s36 s37 s48 s50 s55 s60
+Authorisations u183 s4 s7 s9 s12 s15 s16 s21 s35 s42 s44 s45 s47 s48 s54 s58
+Authorisations u184 s6 s9 s12 s14 s18 s26 s28 s38 s39 s51 s59
+Authorisations u185 s3 s4 s22 s29 s31 s38 s42 s45 s46 s55 s59
+Authorisations u186 s11 s15 s35 s48 s53 s54 s58
+Authorisations u187 s5 s9 s17 s18 s31 s32 s51 s57 s60
+Authorisations u188 s2 s8 s19 s24 s32 s37 s41 s49 s50 s56
+Authorisations u189 s8 s9 s23 s37 s41 s45 s48 s60
+Authorisations u190 s4 s5 s12 s22 s24 s30 s31 s33 s49 s52 s57 s59
+Authorisations u191 s1 s4 s12 s16 s17 s19 s21 s24 s27 s30 s31 s40 s45 s48 s53 s60
+Authorisations u192 s3 s5 s21 s29 s31 s34 s38 s44 s48 s50 s58 s59
+Authorisations u193 s1 s17 s18 s35 s40 s47 s52
+Authorisations u194 s3 s4 s5 s11 s18 s22 s33 s39 s40 s43 s47 s51
+Authorisations u195 s2 s4 s9 s12 s16 s29 s33 s37 s38 s45 s47
+Authorisations u196 s5 s7 s10 s13 s21 s24 s25 s31 s34 s35 s38 s42 s45 s50 s53 s59
+Authorisations u197 s3 s8 s15 s17 s20 s37 s46 s48 s52
+Authorisations u198 s6 s21 s24 s28 s33 s34 s35 s41 s43 s48
+Authorisations u199 s2 s16 s21 s24 s29 s35 s37 s42 s44
+Authorisations u200 s2 s5 s6 s9 s16 s19 s20 s22 s34 s45 s47
+Authorisations u201 s10 s13 s25 s27 s37 s40 s51 s52 s53 s54 s56
+Authorisations u202 s1 s2 s6 s10 s13 s15 s34 s39 s45 s48 s51 s53 s59
+Authorisations u203 s5 s9 s13 s23 s24 s27 s31 s40 s51 s53 s57 s58 s59
+Authorisations u204 s11 s16 s22 s29 s38 s45 s48 s51
+Authorisations u205 s2 s8 s14 s18 s19 s22 s23 s30 s37 s42 s46 s49 s53
+Authorisations u206 s11 s13 s29 s32 s33 s39
+Authorisations u207 s10 s19 s20 s30 s41 s48 s51 s55 s60
+Authorisations u208 s8 s24 s25 s29 s40 s44 s59
+Authorisations u209 s12 s17 s30 s33 s48 s49 s51 s54 s55 s58
+Authorisations u210 s1 s5 s6 s10 s31 s38 s44 s59 s60
+Authorisations u211 s15 s16 s22 s23 s24 s27 s31 s50
+Authorisations u212 s4 s5 s6 s7 s14 s15 s17 s24 s30 s36 s37 s43 s46 s50 s53 s56 s58 s59
+Authorisations u213 s2 s17 s20 s22 s39 s50 s55 s58
+Authorisations u214 s2 s17 s19 s22 s24 s26 s28 s32 s33 s39 s46 s49 s51 s56 s60
+Authorisations u215 s3 s5 s9 s15 s21 s25 s26 s34 s38 s49 s54 s60
+Authorisations u216 s2 s4 s10 s12 s19 s28 s29 s39 s40 s48 s49 s53 s55 s60
+Authorisations u217 s2 s5 s8 s10 s11 s13 s16 s24 s30 s32 s33 s34 s38 s41 s45 s51
+Authorisations u218 s6 s10 s18 s20 s26 s47 s49 s53 s59
+Authorisations u219 s4 s7 s12 s13 s15 s16 s18 s28 s37 s49 s53 s55 s59
+Authorisations u220 s9 s11 s14 s18 s26 s27 s37 s38 s44 s49 s51 s55 s60
+Authorisations u221 s1 s2 s4 s15 s17 s27 s29 s32 s33 s36 s47 s48 s49 s56
+Authorisations u222 s13 s15 s18 s19 s23 s31 s34 s43 s46 s51 s53 s54 s58
+Authorisations u223 s1 s7 s19 s21 s23 s28 s35 s42 s47 s51 s52
+Authorisations u224 s1 s11 s12 s17 s18 s24 s32 s33 s39 s44 s45 s46 s49 s60
+Authorisations u225 s2 s6 s9 s23 s26 s35 s43 s44 s55 s57
+Authorisations u226 s1 s4 s28 s34 s40 s41 s45
+Authorisations u227 s4 s12 s28 s43 s45 s58
+Authorisations u228 s9 s11 s13 s37 s51
+Authorisations u229 s12 s20 s22 s24 s42 s45 s46 s47 s48 s49 s51 s52 s54 s57
+Authorisations u230 s1 s2 s11 s20 s32 s50 s51 s53 s55
+Authorisations u231 s1 s9 s22 s23 s28 s34 s39 s40 s43 s47 s55 s56
+Authorisations u232 s1 s4 s5 s13 s16 s21 s29 s32 s41 s44 s51 s59 s60
+Authorisations u233 s6 s11 s18 s19 s25 s30 s33 s37 s41 s48 s58 s59 s60
+Authorisations u234 s3 s5 s7 s10 s12 s24 s33 s35 s37 s39 s40 s41 s44 s45 s46 s52 s55 s60
+Authorisations u235 s2 s5 s6 s9 s14 s19 s23 s34 s36 s40 s44 s48 s50 s52 s54 s55 s58
+Authorisations u236 s12 s15 s17 s31 s32 s34 s43 s44 s56 s57
+Authorisations u237 s14 s25 s26 s35 s37 s41 s53
+Authorisations u238 s3 s6 s7 s8 s14 s15 s17 s24 s25 s27 s28 s32 s40 s42 s48 s57
+Authorisations u239 s13 s26 s31 s34 s40 s42 s47 s52 s54 s56
+Authorisations u240 s1 s2 s8 s14 s30 s33 s51 s53
+Authorisations u241 s7 s9 s12 s20 s21 s22 s29 s33 s38 s43 s46 s48 s49 s50 s52 s56
+Authorisations u242 s16 s35 s40 s48 s51 s53 s54
+Authorisations u243 s2 s3 s5 s10 s16 s25 s26 s32 s48 s52 s54 s56
+Authorisations u244 s2 s10 s13 s23 s32 s42 s44 s50 s52 s53 s57
+Authorisations u245 s4 s13 s19 s21 s28 s32 s38 s44 s47
+Authorisations u246 s3 s4 s7 s20 s24 s26 s29 s31 s35 s37 s40 s41 s42 s44 s48 s52 s53 s54 s59
+Authorisations u247 s1 s3 s33 s36 s42 s52
+Authorisations u248 s2 s3 s4 s6 s12 s13 s16 s17 s18 s22 s23 s31 s32 s33 s34 s38 s42 s45 s56 s57
+Authorisations u249 s2 s4 s9 s27 s31 s38 s43 s44 s48 s49 s54 s55 s56 s59
+Authorisations u250 s7 s8 s12 s16 s23 s25 s28 s30 s31 s32 s51 s54 s55 s56 s58
+Authorisations u251 s1 s9 s29 s30 s31 s34 s38 s39 s44 s52 s54
+Authorisations u252 s1 s4 s7 s9 s11 s17 s19 s23 s24 s25 s53
+Authorisations u253 s14 s22 s24 s25 s32 s38 s45 s48 s55
+Authorisations u254 s5 s8 s9 s15 s18 s22 s45 s48 s51 s52 s53 s55 s58
+Authorisations u255 s8 s9 s18 s19 s23 s26 s28 s33 s36 s42 s54 s58 s60
+Authorisations u256 s7 s15 s20 s22 s24 s26 s27 s28 s48 s53 s54 s58 s60
+Authorisations u257 s2 s5 s6 s8 s11 s12 s14 s15 s27 s37 s43 s53 s56
+Authorisations u258 s7 s12 s14 s17 s23 s32 s41 s47 s59
+Authorisations u259 s10 s37 s48 s50 s57 s58 s59 s60
+Authorisations u260 s2 s16 s22 s30 s31 s35 s41 s52 s55 s60
+Authorisations u261 s8 s12 s18 s24 s25 s42 s45 s48 s53 s54 s59
+Authorisations u262 s4 s11 s15 s20 s30 s31 s43 s46 s49 s54 s57 s60
+Authorisations u263 s10 s12 s16 s21 s22 s24 s30 s31 s33 s34 s44 s47 s58 s59
+Authorisations u264 s8 s11 s28 s36 s37 s45 s51
+Authorisations u265 s3 s11 s15 s26 s27 s33 s39 s40 s59 s60
+Authorisations u266 s5 s8 s19 s23 s27 s28 s37 s38 s41 s51 s52
+Authorisations u267 s3 s13 s16 s21 s30 s36 s40 s41 s42 s43 s44 s48 s51 s60
+Authorisations u268 s2 s4 s5 s7 s9 s13 s20 s21 s22 s23 s25 s28 s36 s38 s47 s50 s51 s56
+Authorisations u269 s3 s7 s9 s17 s18 s19 s21 s25 s29 s30 s31 s32 s37 s38 s46 s57 s58 s60
+Authorisations u270 s5 s6 s10 s14 s22 s27 s35 s49 s50 s51 s52 s55 s56 s57 s60
+Authorisations u271 s12 s24 s25 s26 s27 s31 s41 s47 s49 s51 s52 s55 s58 s59
+Authorisations u272 s2 s8 s9 s14 s19 s21 s31 s40 s45 s47 s49 s51 s57 s59 s60
+Authorisations u273 s3 s8 s12 s15 s30 s35 s47 s52 s53 s57
+Authorisations u274 s12 s13 s16 s17 s19 s22 s27 s32 s33 s37 s38 s39 s42 s43 s47 s51 s52 s53 s56
+Authorisations u275 s14 s18 s23 s33 s34 s36 s37 s42 s43 s45 s54 s56 s59
+Authorisations u276 s1 s3 s6 s13 s16 s17 s18 s21 s27 s33 s39 s44 s51
+Authorisations u277 s4 s10 s13 s24 s37 s41 s44 s48 s51
+Authorisations u278 s6 s9 s11 s13 s16 s18 s21 s29 s30 s34 s36 s39 s40 s49 s53 s55 s56
+Authorisations u279 s2 s12 s24 s27 s31 s38 s50 s52 s56 s58 s59
+Authorisations u280 s2 s3 s4 s19 s22 s25 s26 s31 s38 s43 s45 s53 s56 s57
+Authorisations u281 s8 s12 s13 s28 s29 s36 s39 s43 s44 s48 s59 s60
+Authorisations u282 s6 s11 s23 s26 s27 s31 s32 s37 s40 s41 s43 s57
+Authorisations u283 s5 s8 s28 s38 s40 s51
+Authorisations u284 s2 s10 s21 s24 s32 s34 s40 s43 s50 s60
+Authorisations u285 s4 s8 s10 s12 s18 s20 s21 s25 s26 s32 s37 s40 s43 s44 s49 s52 s54 s56
+Authorisations u286 s7 s8 s11 s14 s15 s23 s26 s28 s29 s31 s36 s39 s41 s51 s52 s57 s58
+Authorisations u287 s7 s17 s20 s28 s31 s33 s40 s42 s44 s45 s49 s52 s55 s58
+Authorisations u288 s3 s10 s22 s48 s59
+Authorisations u289 s8 s16 s19 s23 s26 s28 s33 s36 s40 s45 s50 s57
+Authorisations u290 s4 s9 s10 s18 s42 s49 s52 s54 s57 s59 s60
+Authorisations u291 s3 s6 s7 s11 s28 s42 s46 s52 s56
+Authorisations u292 s2 s3 s5 s9 s11 s14 s15 s21 s24 s26 s27 s29 s31 s34 s45 s47 s49 s50 s59
+Authorisations u293 s2 s6 s15 s25 s32 s34 s38 s40 s60
+Authorisations u294 s8 s12 s15 s20 s21 s22 s28 s33 s38 s42 s43 s49 s55
+Authorisations u295 s2 s4 s8 s16 s28 s39 s41 s43 s48 s49 s51 s55 s57 s60
+Authorisations u296 s17 s23 s24 s25 s27 s31 s38 s43 s48 s51 s52 s54 s55 s59
+Authorisations u297 s2 s6 s13 s16 s29 s35 s41 s42 s43 s45 s53 s57
+Authorisations u298 s2 s4 s13 s16 s20 s21 s23 s24 s28 s34 s37 s42 s45 s47 s53 s54 s58 s60
+Authorisations u299 s11 s13 s21 s27 s29 s30 s37 s39 s40 s41 s45 s46 s48 s54 s55 s56 s57
+Authorisations u300 s7 s21 s31 s33 s36 s43 s50 s53
+Authorisations u301 s2 s4 s8 s9 s16 s20 s23 s29 s32 s36 s52 s55 s56
+Authorisations u302 s5 s8 s12 s18 s34 s46 s48 s53 s56 s60
+Authorisations u303 s2 s3 s6 s13 s16 s19 s20 s21 s25 s27 s34 s41 s45 s52
+Authorisations u304 s1 s3 s8 s15 s17 s19 s22 s29 s48 s54
+Authorisations u305 s4 s6 s11 s16 s20 s23 s25 s30 s36 s37 s38 s39 s40 s42 s45 s50 s51 s56
+Authorisations u306 s6 s10 s12 s21 s28 s29 s34 s42 s46 s51 s53 s57 s60
+Authorisations u307 s3 s4 s5 s19 s26 s34 s35 s40 s43 s45 s52
+Authorisations u308 s8 s13 s14 s18 s20 s25 s40 s41 s49 s55
+Authorisations u309 s1 s5 s7 s11 s14 s15 s25 s33 s36 s40 s42 s44 s47 s50 s55 s56 s59
+Authorisations u310 s8 s9 s21 s35 s41 s50 s54 s56 s60
+Authorisations u311 s2 s9 s14 s19 s22 s26 s27 s29 s41 s45 s47 s49
+Authorisations u312 s4 s13 s16 s18 s22 s28 s36 s38 s39 s42 s48 s52 s56 s58 s60
+Authorisations u313 s7 s9 s19 s29 s31 s32 s35 s39 s52 s59
+Authorisations u314 s9 s10 s20 s23 s27 s43 s44 s54 s55 s59 s60
+Authorisations u315 s1 s7 s9 s16 s28 s31 s34 s37 s42 s44 s46 s47 s48 s56 s57 s60
+Authorisations u316 s5 s12 s15 s21 s25 s26 s38 s41 s44 s50 s52
+Authorisations u317 s2 s5 s15 s19 s23 s28 s29 s35 s37 s41 s45 s46 s48 s55 s59
+Authorisations u318 s7 s14 s20 s23 s27 s28 s30 s32 s40 s46
+Authorisations u319 s2 s3 s7 s8 s9 s15 s20 s28 s29 s44 s56
+Authorisations u320 s1 s2 s7 s15 s20 s25 s36 s42 s50 s52 s54
+Authorisations u321 s5 s10 s13 s14 s19 s30 s31 s34 s45 s52 s53
+Authorisations u322 s7 s8 s14 s18 s20 s25 s28 s29 s41 s43 s46 s48 s52 s53 s55
+Authorisations u323 s1 s3 s10 s11 s24 s25 s32 s35 s42 s44 s54 s57 s58
+Authorisations u324 s3 s5 s7 s14 s17 s33 s34 s39 s40 s42 s46 s49 s57 s59
+Authorisations u325 s2 s8 s10 s17 s22 s23 s29 s31 s34 s36 s51 s56 s59 s60
+Authorisations u326 s7 s8 s9 s12 s19 s21 s25 s26 s28 s29 s31 s32 s34 s40 s42 s48 s54 s57
+Authorisations u327 s9 s10 s14 s22 s25 s35 s36 s43 s45 s50 s55 s58 s59
+Authorisations u328 s8 s11 s36 s56 s59
+Authorisations u329 s2 s3 s11 s25 s32 s36 s40 s42 s48 s59 s60
+Authorisations u330 s13 s14 s17 s18 s25 s26 s30 s46 s48 s49 s51 s53
+Authorisations u331 s2 s10 s15 s19 s21 s22 s32 s33 s36 s41 s46 s47 s56
+Authorisations u332 s5 s9 s35 s37 s43 s47 s51 s54 s58
+Authorisations u333 s1 s5 s14 s17 s20 s24 s28 s31 s35 s44 s46 s49 s51 s57 s60
+Authorisations u334 s2 s4 s10 s11 s21 s22 s24 s29 s30 s34 s51 s53 s60
+Authorisations u335 s4 s6 s9 s20 s24 s30 s32 s38 s47 s55 s57
+Authorisations u336 s5 s6 s18 s23 s25 s29 s38 s42 s43 s49 s53
+Authorisations u337 s3 s5 s7 s8 s9 s10 s15 s29 s30 s32 s33 s40 s41 s42 s44 s47 s53 s55 s58 s59 s60
+Authorisations u338 s1 s2 s5 s11 s13 s15 s25 s38 s40 s41 s44 s51 s55 s59 s60
+Authorisations u339 s3 s13 s14 s16 s28 s40 s41 s42 s43 s47 s52 s56
+Authorisations u340 s6 s15 s16 s21 s22 s23 s24 s40 s42 s50 s52
+Authorisations u341 s4 s6 s7 s10 s23 s27 s29 s33 s46 s54
+Authorisations u342 s3 s4 s10 s19 s22 s29 s30 s32 s39 s45 s52 s54 s57
+Authorisations u343 s8 s16 s21 s44 s45 s46 s47 s49 s58
+Authorisations u344 s3 s8 s17 s18 s23 s28 s33 s35 s41 s43 s44 s56 s57 s59
+Authorisations u345 s2 s3 s8 s9 s14 s16 s24 s27 s29 s43 s45 s48 s50 s57 s59 s60
+Authorisations u346 s4 s14 s17 s26 s27 s33 s35 s44 s46 s56 s57
+Authorisations u347 s1 s4 s6 s9 s24 s35 s44 s56
+Authorisations u348 s6 s30 s31 s37 s41 s45 s54 s57 s58
+Authorisations u349 s11 s14 s26 s29 s37 s41 s44 s56 s58
+Authorisations u350 s3 s5 s8 s15 s16 s22 s26 s28 s44 s46 s48 s54 s58
+Authorisations u351 s11 s14 s16 s17 s19 s22 s24 s29 s30 s34 s36 s44 s45 s47 s53 s54 s57
+Authorisations u352 s4 s6 s17 s18 s23 s32 s37 s45
+Authorisations u353 s4 s6 s8 s14 s15 s18 s23 s29 s39 s43 s50 s60
+Authorisations u354 s7 s9 s11 s15 s21 s22 s23 s26 s28 s37 s40 s42 s45 s46 s47 s59
+Authorisations u355 s3 s4 s9 s12 s22 s26 s33 s44 s47 s49 s58
+Authorisations u356 s1 s2 s5 s7 s10 s16 s17 s21 s22 s24 s27 s31 s42 s46 s49 s53
+Authorisations u357 s7 s11 s25 s30 s40 s51
+Authorisations u358 s2 s3 s8 s22 s23 s29 s32 s36 s41 s43 s48
+Authorisations u359 s8 s13 s19 s26 s27 s28 s33 s34 s38 s42 s44 s45 s58 s60
+Authorisations u360 s7 s8 s13 s14 s17 s25 s27 s36 s44 s50
+Authorisations u361 s10 s12 s15 s17 s23 s29 s47 s48 s52 s55 s56 s57
+Authorisations u362 s9 s12 s17 s23 s25 s26 s31 s35 s37 s39 s40 s45 s49 s57 s58
+Authorisations u363 s1 s9 s11 s15 s16 s17 s30 s33 s34 s37 s39 s50 s53
+Authorisations u364 s2 s3 s5 s7 s17 s21 s24 s33 s37 s40 s49 s56
+Authorisations u365 s2 s13 s21 s25 s32 s41 s42 s46 s51 s53 s55 s59 s60
+Authorisations u366 s7 s10 s12 s26 s34 s37 s41 s43 s45 s49 s52
+Authorisations u367 s1 s2 s8 s21 s24 s27 s29 s34 s39 s41 s50 s52 s57 s60
+Authorisations u368 s1 s4 s6 s13 s16 s32 s37 s39 s42 s46 s49 s51 s52 s57 s59
+Authorisations u369 s2 s7 s11 s13 s14 s18 s19 s20 s21 s25 s27 s29 s31 s37 s39 s56 s58 s59
+Authorisations u370 s9 s17 s19 s21 s23 s24 s27 s28 s41 s42 s43 s45 s47 s53 s55
+Authorisations u371 s7 s23 s24 s27 s28 s31 s38 s41 s46 s48 s49 s50 s51 s58
+Authorisations u372 s1 s8 s13 s29 s40 s43 s51 s54 s60
+Authorisations u373 s2 s3 s11 s16 s17 s22 s23 s24 s30 s31 s35 s40 s46 s48 s58
+Authorisations u374 s4 s15 s19 s20 s23 s26 s32 s34 s53
+Authorisations u375 s2 s3 s15 s16 s20 s42 s45 s46 s49 s50 s54 s56 s59
+Authorisations u376 s1 s11 s14 s21 s26 s27 s34 s38 s40 s49 s59
+Authorisations u377 s1 s14 s18 s24 s26 s27 s33 s37 s44 s46 s53 s59 s60
+Authorisations u378 s4 s6 s12 s13 s14 s18 s21 s22 s28 s29 s31 s40 s42 s47 s53
+Authorisations u379 s1 s3 s11 s12 s19 s25 s27 s40 s42 s48 s49 s54 s58 s60
+Authorisations u380 s3 s4 s5 s18 s44 s49 s57
+Authorisations u381 s6 s11 s12 s14 s15 s29 s35 s38 s44 s45 s46 s51 s56
+Authorisations u382 s1 s2 s7 s15 s21 s25 s28 s31 s44 s49 s52 s55
+Authorisations u383 s13 s19 s20 s22 s24 s28 s31 s38 s39 s46 s55 s60
+Authorisations u384 s9 s21 s22 s23 s26 s27 s29 s35 s39 s43 s44 s46 s47 s51 s55 s56
+Authorisations u385 s1 s4 s16 s20 s35 s37 s40 s41 s45 s54
+Authorisations u386 s5 s10 s11 s14 s17 s27 s34 s37 s42 s58 s59
+Authorisations u387 s1 s2 s3 s5 s6 s8 s11 s14 s16 s24 s26 s33 s35 s41 s47 s50 s59
+Authorisations u388 s1 s4 s10 s22 s27 s34 s36 s51 s54
+Authorisations u389 s3 s4 s11 s12 s17 s18 s21 s31 s39 s41 s46 s50 s57
+Authorisations u390 s2 s20 s25 s28 s29 s31 s33 s34 s36 s39 s41 s42 s43 s60
+Authorisations u391 s3 s14 s15 s17 s19 s25 s28 s30 s31 s36 s40 s44 s50 s52 s60
+Authorisations u392 s4 s15 s20 s22 s32 s37 s38 s46 s48 s60
+Authorisations u393 s18 s26 s27 s39 s42 s47 s48 s53 s56 s57
+Authorisations u394 s12 s20 s21 s32 s36 s39 s40 s42 s48 s56 s59 s60
+Authorisations u395 s1 s2 s5 s10 s18 s28 s30 s31 s36 s38 s39 s44 s47 s48
+Authorisations u396 s8 s10 s14 s21 s22 s29 s30 s35 s44 s54 s58
+Authorisations u397 s3 s4 s17 s23 s40 s41 s45 s46 s52 s54 s59
+Authorisations u398 s5 s9 s13 s16 s18 s24 s27 s28 s31 s33 s34 s39 s55 s59
+Authorisations u399 s3 s14 s21 s23 s33 s34 s42 s43 s44 s47 s49 s55 s56
+Authorisations u400 s6 s7 s10 s18 s25 s37 s42 s45 s47 s52
+Authorisations u401 s4 s6 s7 s8 s14 s17 s31 s35 s36 s40 s44 s54 s55 s56
+Authorisations u402 s9 s12 s15 s22 s23 s43 s44 s45 s48 s52 s56 s57
+Authorisations u403 s3 s5 s6 s8 s14 s28 s33 s41 s55 s59
+Authorisations u404 s6 s7 s21 s25 s27 s39 s51 s56
+Authorisations u405 s4 s6 s17 s22 s33 s41 s43 s45 s52 s56
+Authorisations u406 s4 s13 s18 s22 s25 s28 s30 s35 s36 s44 s46 s47 s55 s56 s60
+Authorisations u407 s2 s4 s9 s13 s17 s21 s24 s25 s27 s28 s31 s39 s41 s52 s53 s56 s58
+Authorisations u408 s1 s5 s21 s22 s31 s36 s52 s53 s54
+Authorisations u409 s3 s5 s13 s19 s24 s25 s27 s29 s33 s35 s41 s45 s56
+Authorisations u410 s2 s3 s5 s16 s22 s27 s40 s41 s42 s49 s51 s52 s59
+Authorisations u411 s4 s6 s9 s11 s15 s22 s27 s33 s35 s41 s44 s45 s49 s53
+Authorisations u412 s7 s23 s34 s36 s44 s48 s49 s53 s56
+Authorisations u413 s1 s4 s13 s14 s15 s18 s27 s33 s34 s35 s37 s41 s46 s48 s49 s50 s60
+Authorisations u414 s22 s27 s39 s40 s42 s44 s47 s55 s57 s58
+Authorisations u415 s6 s10 s15 s19 s21 s22 s27 s30 s31 s35 s47 s50 s51 s54 s57
+Authorisations u416 s9 s26 s27 s30 s32 s36 s40 s46 s51 s52 s55 s58
+Authorisations u417 s7 s8 s11 s19 s21 s23 s24 s31 s42 s43 s44 s48 s50 s58
+Authorisations u418 s5 s6 s13 s21 s22 s23 s27 s31 s36 s40 s54 s60
+Authorisations u419 s2 s8 s13 s14 s16 s35 s42 s44 s45 s48 s49 s55 s56
+Authorisations u420 s4 s10 s30 s35 s36 s41 s42 s43 s46 s50 s58 s59 s60
+Authorisations u421 s1 s5 s8 s9 s13 s14 s20 s25 s28 s40 s49 s52 s53
+Authorisations u422 s9 s13 s20 s23 s25 s26 s38 s40 s43 s53 s58
+Authorisations u423 s1 s16 s25 s26 s27 s38 s39 s44 s45 s46 s48 s51 s54
+Authorisations u424 s3 s6 s11 s13 s19 s23 s27 s29 s40 s48 s55 s58
+Authorisations u425 s1 s27 s45 s52 s53 s57 s58 s60
+Authorisations u426 s4 s13 s14 s31 s40 s43 s45 s54 s55
+Authorisations u427 s6 s7 s9 s10 s11 s12 s13 s14 s15 s16 s23 s27 s31 s34 s42 s51 s52 s53 s58
+Authorisations u428 s6 s7 s9 s12 s20 s22 s24 s30 s32 s33 s41 s48 s49 s51 s53 s57
+Authorisations u429 s10 s34 s37 s42 s44 s45 s52
+Authorisations u430 s3 s6 s14 s32 s48 s54 s58 s60
+Authorisations u431 s1 s16 s18 s21 s22 s25 s27 s29 s33 s39 s43 s50 s52 s53 s54 s56
+Authorisations u432 s4 s13 s19 s25 s26 s32 s33 s38 s39 s40 s43 s46 s49 s53 s55
+Authorisations u433 s5 s7 s12 s13 s16 s24 s27 s32 s34 s35 s40 s42 s50 s51 s55 s56 s57
+Authorisations u434 s10 s13 s17 s18 s29 s30 s33 s40 s47 s50 s53 s54 s60
+Authorisations u435 s1 s5 s13 s14 s21 s23 s24 s30 s32 s42 s43 s44 s52
+Authorisations u436 s6 s19 s21 s22 s28 s29 s30 s34 s37 s41 s45 s48 s49 s50 s57 s58 s59 s60
+Authorisations u437 s1 s15 s19 s21 s22 s23 s24 s27 s28 s32 s46 s49 s51 s56
+Authorisations u438 s4 s9 s11 s12 s16 s17 s18 s21 s42 s46 s47 s48 s54
+Authorisations u439 s1 s4 s11 s13 s23 s53 s55
+Authorisations u440 s1 s12 s13 s16 s17 s20 s23 s49 s51 s54 s56 s60
+Authorisations u441 s4 s10 s14 s22 s29 s32 s36 s53
+Authorisations u442 s1 s10 s11 s24 s25 s28 s29 s30 s32 s35 s40 s43 s44 s46 s55
+Authorisations u443 s5 s6 s7 s9 s23 s33 s34 s43 s47 s50 s52 s53 s58 s59
+Authorisations u444 s4 s6 s7 s9 s24 s28 s29 s39 s41 s47 s56
+Authorisations u445 s21 s32 s36 s42 s44 s58
+Authorisations u446 s3 s5 s9 s15 s17 s18 s25 s36 s37 s40 s47 s58 s59 s60
+Authorisations u447 s2 s15 s19 s22 s27 s34 s35 s51 s60
+Authorisations u448 s5 s15 s18 s23 s24 s27 s29 s31 s32 s33 s35 s46 s48 s49 s51 s56 s57 s59
+Authorisations u449 s2 s6 s8 s24 s31 s36 s43 s45 s56 s60
+Authorisations u450 s1 s3 s4 s6 s10 s13 s14 s17 s25 s26 s27 s36 s40 s55 s59
+Authorisations u451 s13 s19 s23 s29 s34 s41 s49 s57 s59
+Authorisations u452 s2 s3 s8 s9 s11 s13 s15 s24 s27 s29 s31 s35 s42 s46 s48 s55 s58
+Authorisations u453 s2 s4 s11 s14 s18 s36 s37 s38 s40 s45 s47
+Authorisations u454 s1 s4 s5 s17 s20 s26 s30 s33 s36 s44 s46 s50 s57 s59 s60
+Authorisations u455 s6 s9 s12 s20 s25 s29 s35 s37
+Authorisations u456 s3 s9 s15 s19 s20 s22 s24 s27 s30 s34 s36 s39 s46 s56 s59
+Authorisations u457 s3 s6 s11 s15 s16 s22 s24 s27 s31 s32 s43 s46 s47 s54 s59 s60
+Authorisations u458 s4 s21 s23 s25 s32 s33 s35 s36 s39 s47 s54 s58
+Authorisations u459 s2 s3 s5 s12 s15 s23 s31 s32 s34 s39 s42 s46 s48 s52
+Authorisations u460 s3 s5 s16 s22 s28 s29 s44 s51 s58 s60
+Authorisations u461 s1 s4 s9 s19 s26 s27 s39 s40 s48 s53 s56
+Authorisations u462 s1 s2 s3 s15 s17 s18 s22 s36 s37 s40 s41 s46 s54 s57
+Authorisations u463 s1 s4 s5 s20 s26 s30 s31 s33 s40 s41 s43 s44 s46 s48 s55 s58
+Authorisations u464 s1 s7 s10 s14 s31 s36 s42 s45 s52 s53 s54 s56
+Authorisations u465 s1 s13 s15 s18 s21 s24 s29 s33 s35 s40 s49 s50 s54 s56 s57 s60
+Authorisations u466 s3 s4 s5 s12 s16 s17 s24 s25 s29 s36 s50 s55
+Authorisations u467 s15 s19 s22 s25 s37 s38 s41 s56 s59
+Authorisations u468 s9 s27 s30 s37 s52 s60
+Authorisations u469 s2 s4 s6 s7 s12 s23 s26 s28 s30 s31 s32 s42 s46 s60
+Authorisations u470 s1 s16 s17 s18 s32 s41 s51 s56 s58
+Authorisations u471 s4 s8 s9 s17 s22 s26 s31 s34 s38 s49 s50 s57 s58
+Authorisations u472 s4 s10 s22 s23 s29 s34 s38 s50 s52 s59
+Authorisations u473 s1 s6 s8 s11 s41 s47 s56 s57
+Authorisations u474 s2 s7 s11 s14 s15 s18 s19 s23 s26 s30 s32 s38 s46 s57 s59
+Authorisations u475 s1 s6 s23 s34 s35 s48
+Authorisations u476 s2 s3 s7 s9 s12 s15 s16 s17 s25 s32 s37 s43 s44 s49 s54 s56 s60
+Authorisations u477 s2 s8 s9 s11 s17 s26 s35 s36 s38 s47 s55 s57 s60
+Authorisations u478 s4 s10 s12 s21 s25 s26 s29 s42 s52 s55
+Authorisations u479 s1 s7 s11 s12 s19 s20 s22 s27 s33 s36 s42 s45 s50 s51 s57 s59
+Authorisations u480 s1 s4 s22 s24 s25 s29 s30 s35 s46 s49 s54 s60
+Authorisations u481 s2 s3 s5 s7 s8 s9 s16 s17 s20 s28 s40 s46 s56 s59
+Authorisations u482 s17 s22 s50 s54 s56
+Authorisations u483 s1 s6 s7 s10 s14 s25 s41 s49 s55
+Authorisations u484 s6 s18 s21 s23 s26 s30 s44 s49 s53
+Authorisations u485 s1 s3 s6 s7 s10 s18 s28 s29 s33 s43 s45 s47 s56 s58 s60
+Authorisations u486 s9 s11 s14 s16 s17 s35 s39 s45 s47 s50
+Authorisations u487 s8 s11 s13 s14 s16 s18 s21 s22 s23 s26 s30 s32 s36 s44 s57
+Authorisations u488 s4 s6 s14 s16 s21 s22 s27 s32 s35 s37 s40 s49
+Authorisations u489 s1 s12 s20 s31 s32 s40
+Authorisations u490 s1 s3 s10 s15 s29 s30 s34 s41 s48 s56 s58
+Authorisations u491 s1 s3 s4 s12 s15 s17 s20 s21 s23 s24 s25 s28 s42 s45 s46 s48 s51
+Authorisations u492 s1 s3 s7 s20 s27 s29 s32 s33 s36 s43 s45 s57 s59
+Authorisations u493 s1 s5 s7 s8 s21 s23 s26 s31 s37 s43 s45 s54 s58
+Authorisations u494 s2 s4 s8 s9 s10 s18 s24 s27 s30 s34
+Authorisations u495 s2 s3 s5 s7 s9 s11 s12 s13 s14 s22 s23 s25 s31 s48 s56 s59
+Authorisations u496 s6 s9 s11 s15 s25 s30 s35 s38 s39 s55
+Authorisations u497 s1 s3 s10 s12 s19 s20 s33 s36 s38 s43 s60
+Authorisations u498 s1 s9 s13 s31 s34 s39 s44 s48 s57 s60
+Authorisations u499 s15 s16 s23 s31 s35 s37 s39 s47 s51
+Authorisations u500 s6 s8 s9 s10 s13 s18 s29 s33 s35 s38 s41 s43 s45
+Separation-of-duty s1 s5
+Separation-of-duty s1 s19
+Separation-of-duty s1 s22
+Separation-of-duty s1 s23
+Separation-of-duty s1 s32
+Separation-of-duty s1 s40
+Separation-of-duty s1 s43
+Separation-of-duty s1 s49
+Separation-of-duty s2 s11
+Separation-of-duty s2 s12
+Separation-of-duty s2 s13
+Separation-of-duty s2 s29
+Separation-of-duty s2 s57
+Separation-of-duty s2 s58
+Separation-of-duty s3 s37
+Separation-of-duty s3 s54
+Separation-of-duty s3 s56
+Separation-of-duty s4 s5
+Separation-of-duty s4 s16
+Separation-of-duty s4 s24
+Separation-of-duty s4 s26
+Separation-of-duty s4 s51
+Separation-of-duty s5 s10
+Separation-of-duty s5 s52
+Separation-of-duty s6 s10
+Separation-of-duty s6 s23
+Separation-of-duty s6 s26
+Separation-of-duty s6 s34
+Separation-of-duty s6 s52
+Separation-of-duty s7 s9
+Separation-of-duty s7 s11
+Separation-of-duty s7 s15
+Separation-of-duty s7 s28
+Separation-of-duty s7 s35
+Separation-of-duty s7 s43
+Separation-of-duty s7 s54
+Separation-of-duty s8 s22
+Separation-of-duty s8 s35
+Separation-of-duty s8 s36
+Separation-of-duty s8 s39
+Separation-of-duty s8 s41
+Separation-of-duty s8 s47
+Separation-of-duty s8 s51
+Separation-of-duty s8 s59
+Separation-of-duty s8 s60
+Separation-of-duty s9 s10
+Separation-of-duty s9 s13
+Separation-of-duty s9 s42
+Separation-of-duty s9 s50
+Separation-of-duty s10 s19
+Separation-of-duty s10 s26
+Separation-of-duty s10 s27
+Separation-of-duty s10 s44
+Separation-of-duty s10 s52
+Separation-of-duty s12 s38
+Separation-of-duty s12 s41
+Separation-of-duty s12 s46
+Separation-of-duty s12 s51
+Separation-of-duty s12 s57
+Separation-of-duty s12 s58
+Separation-of-duty s13 s15
+Separation-of-duty s13 s18
+Separation-of-duty s13 s19
+Separation-of-duty s13 s21
+Separation-of-duty s13 s25
+Separation-of-duty s13 s31
+Separation-of-duty s13 s36
+Separation-of-duty s13 s37
+Separation-of-duty s13 s59
+Separation-of-duty s14 s18
+Separation-of-duty s14 s20
+Separation-of-duty s14 s25
+Separation-of-duty s14 s37
+Separation-of-duty s14 s56
+Separation-of-duty s14 s57
+Separation-of-duty s15 s25
+Separation-of-duty s15 s36
+Separation-of-duty s15 s44
+Separation-of-duty s15 s54
+Separation-of-duty s15 s55
+Separation-of-duty s16 s39
+Separation-of-duty s16 s45
+Separation-of-duty s16 s47
+Separation-of-duty s16 s53
+Separation-of-duty s16 s54
+Separation-of-duty s16 s58
+Separation-of-duty s16 s59
+Separation-of-duty s17 s29
+Separation-of-duty s17 s43
+Separation-of-duty s17 s56
+Separation-of-duty s17 s58
+Separation-of-duty s18 s38
+Separation-of-duty s18 s46
+Separation-of-duty s18 s49
+Separation-of-duty s19 s20
+Separation-of-duty s19 s24
+Separation-of-duty s19 s28
+Separation-of-duty s19 s44
+Separation-of-duty s19 s51
+Separation-of-duty s19 s55
+Separation-of-duty s20 s30
+Separation-of-duty s20 s37
+Separation-of-duty s20 s46
+Separation-of-duty s20 s52
+Separation-of-duty s21 s23
+Separation-of-duty s21 s26
+Separation-of-duty s21 s34
+Separation-of-duty s21 s49
+Separation-of-duty s21 s55
+Separation-of-duty s21 s56
+Separation-of-duty s22 s38
+Separation-of-duty s22 s40
+Separation-of-duty s22 s48
+Separation-of-duty s23 s26
+Separation-of-duty s23 s34
+Separation-of-duty s23 s44
+Separation-of-duty s23 s48
+Separation-of-duty s24 s44
+Separation-of-duty s24 s49
+Separation-of-duty s24 s53
+Separation-of-duty s25 s30
+Separation-of-duty s25 s31
+Separation-of-duty s25 s36
+Separation-of-duty s25 s37
+Separation-of-duty s26 s32
+Separation-of-duty s26 s40
+Separation-of-duty s26 s44
+Separation-of-duty s27 s46
+Separation-of-duty s27 s56
+Separation-of-duty s28 s60
+Separation-of-duty s29 s31
+Separation-of-duty s29 s45
+Separation-of-duty s29 s46
+Separation-of-duty s29 s49
+Separation-of-duty s29 s56
+Separation-of-duty s30 s38
+Separation-of-duty s30 s40
+Separation-of-duty s30 s59
+Separation-of-duty s31 s34
+Separation-of-duty s31 s39
+Separation-of-duty s31 s54
+Separation-of-duty s32 s54
+Separation-of-duty s32 s59
+Separation-of-duty s33 s44
+Separation-of-duty s34 s50
+Separation-of-duty s34 s51
+Separation-of-duty s35 s40
+Separation-of-duty s35 s52
+Separation-of-duty s36 s46
+Separation-of-duty s36 s50
+Separation-of-duty s38 s47
+Separation-of-duty s39 s55
+Separation-of-duty s40 s41
+Separation-of-duty s40 s42
+Separation-of-duty s40 s51
+Separation-of-duty s40 s52
+Separation-of-duty s40 s56
+Separation-of-duty s41 s42
+Separation-of-duty s41 s44
+Separation-of-duty s41 s45
+Separation-of-duty s41 s47
+Separation-of-duty s41 s50
+Separation-of-duty s41 s58
+Separation-of-duty s41 s60
+Separation-of-duty s42 s44
+Separation-of-duty s42 s54
+Separation-of-duty s43 s48
+Separation-of-duty s43 s52
+Separation-of-duty s44 s56
+Separation-of-duty s45 s51
+Separation-of-duty s45 s56
+Separation-of-duty s46 s53
+Separation-of-duty s46 s54
+Separation-of-duty s46 s57
+Separation-of-duty s47 s48
+Separation-of-duty s48 s55
+Separation-of-duty s49 s60
+Separation-of-duty s50 s56
+Separation-of-duty s52 s53
+Separation-of-duty s52 s54
+Separation-of-duty s52 s58
+Separation-of-duty s53 s60
+At-most-k 3 s47 s34 s9 s26 s48
+At-most-k 3 s11 s57 s8 s45 s35
+At-most-k 3 s54 s57 s41 s12 s43
+At-most-k 3 s7 s8 s55 s19 s26
+At-most-k 3 s50 s10 s29 s38 s53
+At-most-k 3 s39 s55 s41 s22 s59
+At-most-k 3 s4 s47 s37 s55 s38
+At-most-k 3 s2 s58 s25 s15 s59
+At-most-k 3 s54 s6 s56 s41 s47
+At-most-k 3 s47 s44 s21 s39 s33
+At-most-k 3 s10 s31 s19 s47 s33
+At-most-k 3 s59 s32 s17 s25 s42
+At-most-k 3 s41 s24 s60 s20 s54
+At-most-k 3 s29 s59 s2 s35 s42
+At-most-k 3 s45 s55 s54 s19 s5
+At-most-k 3 s11 s34 s10 s7 s49
+At-most-k 3 s2 s17 s31 s49 s30
+At-most-k 3 s58 s34 s46 s50 s57
+At-most-k 3 s29 s57 s12 s25 s52
+At-most-k 3 s55 s34 s39 s19 s9
+At-most-k 3 s31 s43 s45 s16 s14
+At-most-k 3 s41 s27 s36 s48 s14
+At-most-k 3 s40 s33 s1 s10 s19
+At-most-k 3 s37 s54 s30 s32 s39
+At-most-k 3 s40 s49 s43 s14 s24
+At-most-k 3 s48 s33 s57 s51 s23
+At-most-k 3 s8 s47 s41 s1 s38
+At-most-k 3 s22 s41 s52 s55 s6
+At-most-k 3 s12 s19 s15 s17 s36
+At-most-k 3 s13 s27 s39 s41 s30
+At-most-k 3 s30 s42 s2 s50 s21
+At-most-k 3 s44 s54 s49 s31 s39

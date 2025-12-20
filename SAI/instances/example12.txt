@@ -1,0 +1,155 @@
+#Steps: 20
+#Users: 100
+#Constraints: 152
+Authorisations u2
+Authorisations u4 s12 s17
+Authorisations u5 s8
+Authorisations u6 s10
+Authorisations u10 s8
+Authorisations u11 s2 s7 s14 s15
+Authorisations u13 s9 s20
+Authorisations u14 s16 s19
+Authorisations u15 s12
+Authorisations u16 s4
+Authorisations u17 s1 s9 s12
+Authorisations u18 s11 s12 s18
+Authorisations u19 s8 s15
+Authorisations u20 s3 s6 s10
+Authorisations u23 s4 s5 s7 s8
+Authorisations u24 s1 s10
+Authorisations u25 s16
+Authorisations u26 s3 s4 s6 s8 s9
+Authorisations u28 s15 s19
+Authorisations u30 s3 s8 s9 s20
+Authorisations u31 s2
+Authorisations u33 s13 s14
+Authorisations u34 s1 s14 s17 s20
+Authorisations u37 s1 s2 s4 s6 s9 s16 s18
+Authorisations u38
+Authorisations u39 s4 s6 s7 s8 s15 s19
+Authorisations u40
+Authorisations u41 s3 s6
+Authorisations u43 s11
+Authorisations u44
+Authorisations u45 s4 s7 s9 s12 s14 s19 s20
+Authorisations u46
+Authorisations u47 s8 s11 s13
+Authorisations u49 s13 s15
+Authorisations u50 s10 s11
+Authorisations u51 s3 s5 s8 s13 s14 s19
+Authorisations u52 s2
+Authorisations u53 s1
+Authorisations u54 s10 s15
+Authorisations u55 s13
+Authorisations u57 s6 s7
+Authorisations u58 s2 s3 s6 s7
+Authorisations u59 s4 s8 s18
+Authorisations u60 s3 s13 s15 s16
+Authorisations u61 s17 s19
+Authorisations u62
+Authorisations u63 s1 s11 s13
+Authorisations u64
+Authorisations u65 s18
+Authorisations u66 s10
+Authorisations u67 s6 s7 s8 s16
+Authorisations u68 s1 s4 s7 s11
+Authorisations u69 s3 s9 s11 s18
+Authorisations u70 s10 s13 s16
+Authorisations u71 s9 s19
+Authorisations u72 s4 s7 s12 s13
+Authorisations u73 s10 s15 s16
+Authorisations u74 s1 s6 s10
+Authorisations u76 s3 s14 s16 s20
+Authorisations u78 s1 s8 s16
+Authorisations u79 s11 s15
+Authorisations u80 s2
+Authorisations u81 s18
+Authorisations u82
+Authorisations u83 s16
+Authorisations u84 s10
+Authorisations u85 s2 s14
+Authorisations u86 s17 s18
+Authorisations u87 s11
+Authorisations u88 s1 s10
+Authorisations u89
+Authorisations u90 s16
+Authorisations u92 s1 s2 s9 s11 s18
+Authorisations u93 s17
+Authorisations u94
+Authorisations u95 s4 s6 s20
+Authorisations u96 s5
+Authorisations u97 s16
+Authorisations u98
+Authorisations u99 s5 s12 s19
+Authorisations u100 s1 s9
+Separation-of-duty s1 s2
+Separation-of-duty s1 s5
+Separation-of-duty s1 s10
+Separation-of-duty s1 s13
+Separation-of-duty s1 s14
+Separation-of-duty s1 s20
+Separation-of-duty s2 s6
+Separation-of-duty s2 s11
+Separation-of-duty s3 s6
+Separation-of-duty s3 s7
+Separation-of-duty s4 s5
+Separation-of-duty s4 s9
+Separation-of-duty s4 s10
+Separation-of-duty s4 s11
+Separation-of-duty s4 s12
+Separation-of-duty s4 s14
+Separation-of-duty s4 s17
+Separation-of-duty s4 s18
+Separation-of-duty s5 s7
+Separation-of-duty s5 s9
+Separation-of-duty s6 s9
+Separation-of-duty s6 s12
+Separation-of-duty s6 s14
+Separation-of-duty s6 s15
+Separation-of-duty s6 s16
+Separation-of-duty s7 s11
+Separation-of-duty s7 s13
+Separation-of-duty s8 s12
+Separation-of-duty s8 s15
+Separation-of-duty s8 s20
+Separation-of-duty s9 s11
+Separation-of-duty s9 s12
+Separation-of-duty s9 s13
+Separation-of-duty s9 s17
+Separation-of-duty s10 s13
+Separation-of-duty s10 s19
+Separation-of-duty s11 s12
+Separation-of-duty s11 s17
+Separation-of-duty s11 s18
+Separation-of-duty s11 s19
+Separation-of-duty s12 s13
+Separation-of-duty s12 s14
+Separation-of-duty s12 s20
+Separation-of-duty s13 s17
+Separation-of-duty s13 s20
+Separation-of-duty s15 s18
+Separation-of-duty s16 s17
+Separation-of-duty s16 s19
+Separation-of-duty s16 s20
+Separation-of-duty s18 s19
+Separation-of-duty s18 s20
+At-most-k 3 s1 s2 s17 s3 s20
+At-most-k 3 s10 s5 s19 s17 s18
+At-most-k 3 s4 s11 s1 s19 s5
+At-most-k 3 s11 s19 s3 s18 s12
+At-most-k 3 s7 s9 s15 s11 s16
+At-most-k 3 s16 s18 s17 s3 s19
+At-most-k 3 s11 s15 s13 s18 s16
+At-most-k 3 s18 s14 s17 s3 s8
+At-most-k 3 s5 s13 s17 s11 s20
+At-most-k 3 s3 s5 s19 s2 s13
+At-most-k 3 s19 s4 s3 s17 s9
+At-most-k 3 s19 s10 s12 s16 s13
+At-most-k 3 s19 s11 s15 s17 s12
+At-most-k 3 s8 s17 s2 s13 s12
+At-most-k 3 s11 s17 s1 s8 s3
+At-most-k 3 s16 s4 s12 s14 s8
+At-most-k 3 s18 s1 s17 s20 s4
+At-most-k 3 s2 s19 s12 s20 s18
+At-most-k 3 s6 s11 s9 s16 s17
+At-most-k 3 s14 s1 s8 s16 s12

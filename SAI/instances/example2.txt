@@ -1,0 +1,7 @@
+#Steps: 3
+#Users: 4
+#Constraints: 4
+Authorisations u1 s1 s2
+Authorisations u2 s2
+Authorisations u3 s1
+Authorisations u4 s2

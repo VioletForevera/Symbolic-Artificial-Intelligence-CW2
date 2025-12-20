@@ -1,0 +1,12 @@
+#Steps: 7
+#Users: 5
+#Constraints: 9
+Authorisations u1 s3 s7
+Authorisations u2 s2 s5
+Authorisations u3 s1 s6
+Separation-of-duty s2 s5
+At-most-k 2 s6 s2 s7 s4 s5
+At-most-k 3 s3 s4 s2 s1 s7
+At-most-k 3 s6 s1 s3 s5 s7
+At-most-k 3 s1 s3 s4 s5 s6
+At-most-k 4 s2 s4 s6 s7 s3 s5 s1

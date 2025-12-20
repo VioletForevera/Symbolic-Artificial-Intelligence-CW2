@@ -1,0 +1,71 @@
+#Steps: 10
+#Users: 50
+#Constraints: 68
+Authorisations u1 s8 s9
+Authorisations u2 s2 s8 s9
+Authorisations u4 s3
+Authorisations u5 s1
+Authorisations u6
+Authorisations u7
+Authorisations u8 s4 s5
+Authorisations u9
+Authorisations u10 s2
+Authorisations u11
+Authorisations u12 s1
+Authorisations u13 s1 s2 s3 s9
+Authorisations u14 s7
+Authorisations u15 s6 s7
+Authorisations u16
+Authorisations u17 s2
+Authorisations u18 s2 s4
+Authorisations u19
+Authorisations u20 s4
+Authorisations u21 s10
+Authorisations u22
+Authorisations u25 s3 s4
+Authorisations u26 s3
+Authorisations u28 s2 s5
+Authorisations u29
+Authorisations u30 s1 s2 s8
+Authorisations u32
+Authorisations u33
+Authorisations u36 s6 s8 s10
+Authorisations u37 s9
+Authorisations u38
+Authorisations u40
+Authorisations u41 s3
+Authorisations u42 s2 s6
+Authorisations u44 s4
+Authorisations u45 s10
+Authorisations u46
+Authorisations u47
+Authorisations u48 s7
+Authorisations u49
+Authorisations u50
+Binding-of-duty s1 s6
+Binding-of-duty s8 s10
+Separation-of-duty s2 s3
+Separation-of-duty s4 s7
+At-most-k 2 s3 s2 s1 s10 s7
+At-most-k 3 s7 s9 s5 s2 s4
+At-most-k 3 s5 s8 s3 s4 s10
+At-most-k 3 s1 s5 s2 s6 s9
+At-most-k 3 s7 s2 s6 s1 s8
+At-most-k 3 s8 s1 s3 s5 s6
+At-most-k 3 s3 s2 s7 s6 s8
+At-most-k 3 s5 s10 s4 s9 s2
+At-most-k 3 s4 s6 s5 s1 s7
+At-most-k 3 s9 s6 s8 s5 s7
+At-most-k 3 s1 s3 s5 s6 s7
+At-most-k 3 s9 s5 s6 s10 s8
+At-most-k 3 s4 s7 s9 s2 s10
+At-most-k 3 s5 s6 s4 s3 s10
+At-most-k 3 s4 s1 s7 s3 s10
+At-most-k 3 s4 s5 s10 s1 s6
+At-most-k 3 s3 s8 s10 s5 s9
+At-most-k 3 s8 s9 s3 s2 s7
+At-most-k 3 s8 s6 s5 s7 s4
+At-most-k 3 s4 s2 s10 s6 s7
+At-most-k 3 s5 s2 s9 s8 s4
+One-team  s2 s3 s10 (u21 u32 u7 u12) (u4 u39 u2 u14 u46 u49) (u29 u22 u18)
+One-team  s8 s5 s6 (u15 u26 u50 u32) (u25 u11 u48 u16 u19 u30) (u38 u45 u14)

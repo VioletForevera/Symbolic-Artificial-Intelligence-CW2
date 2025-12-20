@@ -1,0 +1,20 @@
+#Steps: 5
+#Users: 7
+#Constraints: 17
+Authorisations u1 s2 s5
+Authorisations u2 s2 s3 s5
+Authorisations u4 s2
+Authorisations u7 s3 s4
+Separation-of-duty s1 s2
+Separation-of-duty s1 s3
+Separation-of-duty s1 s4
+Separation-of-duty s2 s3
+Separation-of-duty s2 s5
+Separation-of-duty s3 s5
+Separation-of-duty s4 s5
+At-most-k 2 s5 s4 s3 s1 s2
+At-most-k 3 s1 s3 s4 s5 s2
+At-most-k 3 s5 s1 s3 s4 s2
+At-most-k 3 s3 s1 s4 s2 s5
+One-team  s5 s3 s4 (u1) (u3 u7 u4) (u5 u6 u2)
+One-team  s5 s1 s4 (u3) (u5 u2 u1 u6) (u4 u7)

@@ -1,0 +1,46 @@
+#Steps: 10
+#Users: 50
+#Constraints: 43
+Authorisations u1 s4
+Authorisations u2 s3 s5
+Authorisations u3 s2
+Authorisations u4 s2
+Authorisations u5 s4
+Authorisations u6 s3 s9
+Authorisations u7
+Authorisations u8 s2
+Authorisations u9 s2 s3
+Authorisations u10 s1 s8
+Authorisations u12 s8
+Authorisations u13
+Authorisations u14 s8
+Authorisations u15 s10
+Authorisations u16
+Authorisations u18
+Authorisations u19
+Authorisations u20 s3
+Authorisations u22
+Authorisations u24
+Authorisations u25 s1 s6
+Authorisations u26
+Authorisations u27
+Authorisations u28 s6
+Authorisations u29
+Authorisations u30 s2
+Authorisations u31
+Authorisations u32
+Authorisations u33 s1 s9
+Authorisations u34 s8
+Authorisations u36
+Authorisations u37 s1 s6
+Authorisations u38
+Authorisations u39
+Authorisations u40 s5
+Authorisations u42 s2
+Authorisations u43 s6 s8
+Authorisations u45
+Authorisations u46 s4 s5
+Authorisations u47
+Authorisations u48 s5
+Separation-of-duty s1 s6
+Separation-of-duty s4 s10
