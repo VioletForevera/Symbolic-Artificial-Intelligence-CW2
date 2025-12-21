@@ -68,24 +68,26 @@ def Solver(filename):
 
     # 5. At-most-k
     for i, (k, steps) in enumerate(instance.at_most_k):
-        # Optimization: If k >= len(steps), constraint is trivial
+        # Optimization: If k >= len(steps), constraint is trivial (always satisfied)
         if k >= len(steps):
             continue
-            
-        # Identify all potential users in these steps
-        potential_users = set()
+
+        # Calculate relevant_users: users authorized for at least one step in the constraint
+        relevant_users = set()
         for s in steps:
-            potential_users.update(step_to_users[s])
-            
+            # step_to_users[s] contains all authorized users for step s (including super users)
+            relevant_users.update(step_to_users[s])
+
+        # Create auxiliary variables only for relevant users
         user_vars = []
-        for u in potential_users:
+        for u in relevant_users:
             literals = []
             for s in steps:
                 if u in step_to_users[s]:
                     literals.append(get_x(s, u))
             
-            # If user u participates in any of the steps s
             if literals:
+                # u_used is True if user u is assigned to any step in 'steps'
                 u_used = model.NewBoolVar(f'amk_{i}_u{u}')
                 model.AddMaxEquality(u_used, literals)
                 user_vars.append(u_used)
@@ -95,25 +97,56 @@ def Solver(filename):
 
     # 6. One-team
     for i, (steps, teams) in enumerate(instance.one_team):
-        team_vars = [model.NewBoolVar(f'ot_{i}_t{t}') for t in range(len(teams))]
-        model.AddExactlyOne(team_vars)
-        
+        viable_teams = []
+        viable_team_vars = []
+
         for t_idx, team_users in enumerate(teams):
+            # Optimisation: Check if the team is viable.
+            # A team is viable ONLY IF for every step in the set, 
+            # the team has at least one member who is authorized to do it.
+            is_viable = True
             for s in steps:
-                relevant_x = []
-                for u in team_users:
-                    if u in step_to_users[s]:
-                        relevant_x.append(get_x(s, u))
-                
-                if relevant_x:
-                    model.Add(sum(relevant_x) == 1).OnlyEnforceIf(team_vars[t_idx])
-                else:
-                    model.Add(team_vars[t_idx] == 0)
+                # Check intersection of team_users and step_to_users[s]
+                if not any(u in step_to_users[s] for u in team_users):
+                    is_viable = False
+                    break
+            
+            if is_viable:
+                t_var = model.NewBoolVar(f'ot_{i}_t{t_idx}')
+                viable_team_vars.append(t_var)
+                viable_teams.append((t_var, team_users))
+
+        if not viable_team_vars:
+            # No team can satisfy the requirements -> UNSAT
+            model.Add(0 == 1)
+        else:
+            # Exactly one viable team must be selected
+            model.AddExactlyOne(viable_team_vars)
+
+            for (t_var, team_users) in viable_teams:
+                for s in steps:
+                    # Collect all users in the team authorized for step s
+                    relevant_x = []
+                    for u in team_users:
+                        if u in step_to_users[s]:
+                            relevant_x.append(get_x(s, u))
+                    
+                    # If this team is selected, someone from the team must do step s
+                    # We know relevant_x is not empty because the team is viable
+                    model.Add(sum(relevant_x) == 1).OnlyEnforceIf(t_var)
 
     # Solve
+    # Solve
     solver = cp_model.CpSolver()
+    
+    # Final Performance Tuning
+    # Use 8 workers (or all distinct cores)
     solver.parameters.num_search_workers = 8
-    # Optimize for multiple solutions search if needed
+    # 0 = No linearization (often better for boolean/logical constraints)
+    solver.parameters.linearization_level = 0
+    # Ensure presolve is enabled (usually default, but explicit for clarity)
+    solver.parameters.cp_model_presolve = True
+
     status = solver.Solve(model)
     
     result = {
