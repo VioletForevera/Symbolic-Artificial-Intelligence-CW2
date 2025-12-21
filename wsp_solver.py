@@ -75,24 +75,40 @@ def Solver(filename):
     # Solve
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
-    end_time = time.time()
-    exe_time = int((end_time - start_time) * 1000)
     
     result = {
         'sat': 'unsat',
         'sol': [],
-        'exe_time': f'{exe_time}ms'
+        'mul_sol': '',
+        'exe_time': ''
     }
     
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         result['sat'] = 'sat'
         sol_list = []
+        assigned_vars = []
+        
         for s in range(instance.num_steps):
             for u in range(instance.num_users):
                 if solver.Value(x[s, u]):
                     sol_list.append(f"s{s+1}: u{u+1}")
+                    assigned_vars.append(x[s, u])
                     break
         result['sol'] = sol_list
+        
+        # Multiple Solutions Check
+        # Add blocking clause: sum of currently true variables must be < num_steps
+        model.Add(sum(assigned_vars) <= instance.num_steps - 1)
+        
+        status2 = solver.Solve(model)
+        if status2 == cp_model.OPTIMAL or status2 == cp_model.FEASIBLE:
+            result['mul_sol'] = 'other solutions exist'
+        else:
+            result['mul_sol'] = 'this is the only solution'
+            
+    end_time = time.time()
+    exe_time = int((end_time - start_time) * 1000)
+    result['exe_time'] = f'{exe_time}ms'
         
     return result
 
