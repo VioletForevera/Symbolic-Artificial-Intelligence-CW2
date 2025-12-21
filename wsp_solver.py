@@ -18,47 +18,80 @@ def Solver(filename):
         exe_time = int((end_time - start_time) * 1000)
         return {'sat': 'error', 'sol': [], 'exe_time': f'{exe_time}ms'}
 
+    # Pre-processing: Identify "Super Users" and valid users for each step
+    super_users = [u for u in range(instance.num_users) if u not in instance.authorizations]
+
+    # Map step -> set of valid users (Optimization: strictly authorized + super users)
+    # Note: instance.authorizations is u -> [s1, s2...]
+    # We want s -> [u1, u2...]
+    step_to_users = {s: set(super_users) for s in range(instance.num_steps)}
+    for u, steps in instance.authorizations.items():
+        for s in steps:
+            step_to_users[s].add(u)
+
     model = cp_model.CpModel()
     
-    # Decision Variables: x[s, u]
-    x = {}
+    # 1. Variables: p[s] = assigned user
+    p = {}
     for s in range(instance.num_steps):
-        for u in range(instance.num_users):
-            x[s, u] = model.NewBoolVar(f'x_s{s}_u{u}')
-            
-    # 1. Assignment Constraint (Exactly One User per Step)
-    for s in range(instance.num_steps):
-        model.AddExactlyOne([x[s, u] for u in range(instance.num_users)])
+        valid_us = sorted(list(step_to_users[s]))
+        if not valid_us:
+             end_time = time.time()
+             exe_time = int((end_time - start_time) * 1000)
+             return {'sat': 'unsat', 'sol': [], 'exe_time': f'{exe_time}ms', 'mul_sol': '', 'num_vars': 0, 'num_constraints': 0}
         
-    # 2. Authorization Constraint
-    # Rule: If user is in dict, they are restricted to those steps.
-    # If user NOT in dict, they are free (no constraints added).
-    for u in range(instance.num_users):
-        if u in instance.authorizations:
-            allowed_steps = set(instance.authorizations[u])
-            for s in range(instance.num_steps):
-                if s not in allowed_steps:
-                    model.Add(x[s, u] == 0)
-    
-    # 3. Separation of Duty (SoD)
+        p[s] = model.NewIntVarFromDomain(
+             cp_model.Domain.FromValues(valid_us), f'p_{s}'
+        )
+
+    # Helper to get boolean x[s, u] <=> p[s] == u (On Demand)
+    bool_cache = {}
+    def get_x(s, u):
+        if (s, u) not in bool_cache:
+            b = model.NewBoolVar(f'x_s{s}_u{u}')
+            model.Add(p[s] == u).OnlyEnforceIf(b)
+            model.Add(p[s] != u).OnlyEnforceIf(b.Not())
+            bool_cache[(s, u)] = b
+        return bool_cache[(s, u)]
+
+    # 2. Assignment, Authorizations
+    # Implicitly handled by Domain of p[s].
+
+    # 3. Separation of Duty (SoD): p[s1] != p[s2]
+    # Only need to add if domains overlap
     for (s1, s2) in instance.separation_duty:
-        for u in range(instance.num_users):
-            model.Add(x[s1, u] + x[s2, u] <= 1)
-            
-    # 4. Binding of Duty (BoD)
+        model.Add(p[s1] != p[s2])
+
+    # 4. Binding of Duty (BoD): p[s1] == p[s2]
     for (s1, s2) in instance.binding_duty:
-        for u in range(instance.num_users):
-            model.Add(x[s1, u] == x[s2, u])
+         model.Add(p[s1] == p[s2])
 
     # 5. At-most-k
     for i, (k, steps) in enumerate(instance.at_most_k):
-        user_used = []
-        for u in range(instance.num_users):
-            u_var = model.NewBoolVar(f'amk_{i}_u{u}')
-            # u_var implies user u performs at least one step in `steps`
-            model.AddMaxEquality(u_var, [x[s, u] for s in steps])
-            user_used.append(u_var)
-        model.Add(sum(user_used) <= k)
+        # Optimization: If k >= len(steps), constraint is trivial
+        if k >= len(steps):
+            continue
+            
+        # Identify all potential users in these steps
+        potential_users = set()
+        for s in steps:
+            potential_users.update(step_to_users[s])
+            
+        user_vars = []
+        for u in potential_users:
+            literals = []
+            for s in steps:
+                if u in step_to_users[s]:
+                    literals.append(get_x(s, u))
+            
+            # If user u participates in any of the steps s
+            if literals:
+                u_used = model.NewBoolVar(f'amk_{i}_u{u}')
+                model.AddMaxEquality(u_used, literals)
+                user_vars.append(u_used)
+        
+        if user_vars:
+            model.Add(sum(user_vars) <= k)
 
     # 6. One-team
     for i, (steps, teams) in enumerate(instance.one_team):
@@ -66,14 +99,21 @@ def Solver(filename):
         model.AddExactlyOne(team_vars)
         
         for t_idx, team_users in enumerate(teams):
-            # If team selected, then for each step s, the assigned user MUST be in team_users.
-            # Implies sum(x[s, u] for u in team_users) == 1
             for s in steps:
-                valid_users = [x[s, u] for u in team_users if u < instance.num_users]
-                model.Add(sum(valid_users) == 1).OnlyEnforceIf(team_vars[t_idx])
+                relevant_x = []
+                for u in team_users:
+                    if u in step_to_users[s]:
+                        relevant_x.append(get_x(s, u))
+                
+                if relevant_x:
+                    model.Add(sum(relevant_x) == 1).OnlyEnforceIf(team_vars[t_idx])
+                else:
+                    model.Add(team_vars[t_idx] == 0)
 
     # Solve
     solver = cp_model.CpSolver()
+    solver.parameters.num_search_workers = 8
+    # Optimize for multiple solutions search if needed
     status = solver.Solve(model)
     
     result = {
@@ -86,19 +126,27 @@ def Solver(filename):
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         result['sat'] = 'sat'
         sol_list = []
-        assigned_vars = []
         
+        current_sol = {}
         for s in range(instance.num_steps):
-            for u in range(instance.num_users):
-                if solver.Value(x[s, u]):
-                    sol_list.append(f"s{s+1}: u{u+1}")
-                    assigned_vars.append(x[s, u])
-                    break
+            val = solver.Value(p[s])
+            sol_list.append(f"s{s+1}: u{val+1}")
+            current_sol[s] = val
         result['sol'] = sol_list
         
         # Multiple Solutions Check
-        # Add blocking clause: sum of currently true variables must be < num_steps
-        model.Add(sum(assigned_vars) <= instance.num_steps - 1)
+        # Blocking clause: at least one variable must change
+        blocking_bools = []
+        for s, val in current_sol.items():
+            if (s, val) in bool_cache:
+                blocking_bools.append(bool_cache[(s, val)])
+            else:
+                b = model.NewBoolVar(f'block_s{s}_{val}')
+                model.Add(p[s] == val).OnlyEnforceIf(b)
+                model.Add(p[s] != val).OnlyEnforceIf(b.Not())
+                blocking_bools.append(b)
+                
+        model.Add(sum(blocking_bools) <= instance.num_steps - 1)
         
         status2 = solver.Solve(model)
         if status2 == cp_model.OPTIMAL or status2 == cp_model.FEASIBLE:
@@ -106,11 +154,35 @@ def Solver(filename):
         else:
             result['mul_sol'] = 'this is the only solution'
             
+    
+    result['num_vars'] = len(model.Proto().variables)
+    result['num_constraints'] = len(model.Proto().constraints)
+
     end_time = time.time()
     exe_time = int((end_time - start_time) * 1000)
     result['exe_time'] = f'{exe_time}ms'
         
     return result
+
+
+def run_hard_analysis(directory="SAI/additional-examples/4-constraint-hard"):
+    """
+    Runs the solver on the first few instances of the hard dataset.
+    """
+    import os
+    
+    print("| Instance | Status | Time (ms) | Vars | Constraints |")
+    print("| :--- | :--- | :--- | :--- | :--- |")
+    
+    # Run slightly fewer files to save time, or just 0.txt to 5.txt
+    files = sorted([f for f in os.listdir(directory) if f.endswith('.txt') and 'solution' not in f])[:5]
+    
+    for filename in files:
+        path = os.path.join(directory, filename)
+        result = Solver(path)
+        time_val = result['exe_time'].replace('ms', '')
+        print(f"| {filename} | {result['sat']} | {time_val} | {result.get('num_vars', '-')} | {result.get('num_constraints', '-')} |")
+
 
 
 def run_batch_analysis(directory="SAI/instances"):
@@ -140,5 +212,7 @@ if __name__ == "__main__":
     # Allow running batch analysis via command line
     if len(sys.argv) > 1 and sys.argv[1] == 'batch':
         run_batch_analysis()
+    elif len(sys.argv) > 1 and sys.argv[1] == 'hard':
+        run_hard_analysis()
     else:
         pass
