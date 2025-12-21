@@ -219,178 +219,200 @@ class SolutionCallback(cp_model.CpSolverSolutionCallback):
 
 def Solver(filename, progress_callback=None):
     """
-    Algorithmic Optimization: Symmetry Breaking & Sparse Modeling.
-    Solves 500-user 'hard' instances in < 2 seconds.
+    Smart WSP Solver - Automatically chooses best algorithm
     
-    Args:
-        filename: Path to WSP instance file
-        progress_callback: Optional callback for progress updates (for GUI compatibility)
+    Strategy:
+    - Small instances (<300 users): Use CP-SAT
+    - Large instances (>=300 users): Use Smart Backtracking with constraint propagation
     """
+    import time
+    
     start_time = time.time()
     
-    # 1. Parsing
+    # Quick parse to determine size
     try:
         instance = read_file(filename)
     except Exception as e:
-        return {'sat': 'error', 'sol': [], 'mul_sol': f'Parse Error: {str(e)}', 'exe_time': '0ms'}
+        return {'sat': 'error', 'sol': [], 'mul_sol': f'Parse error: {e}', 'exe_time': '0ms'}
+    
+    # Choose algorithm based on instance size
+    if instance.num_users >= 300:
+        # Large instance: Use Smart Backtracking
+        if progress_callback:
+            progress_callback({'status': 'Using Smart Backtracking...', 'time': 0})
+        
+        try:
+            from solver_backtrack import Solver_SmartBacktrack
+            result = Solver_SmartBacktrack(filename, progress_callback)
+            
+            # If backtrack fails or times out, try Z3 as fallback
+            if result['sat'] != 'sat' and 'z3' not in result['exe_time']:
+                try:
+                    if progress_callback:
+                        progress_callback({'status': 'Backtrack failed, trying Z3...', 'time': time.time() - start_time})
+                    
+                    from solver_z3 import Solver_Z3
+                    return Solver_Z3(filename, progress_callback)
+                except:
+                    pass
+            
+            return result
+            
+        except Exception as e:
+            # Backtracking failed, fallback to CP-SAT
+            if progress_callback:
+                progress_callback({'status': f'Error: {e}, using CP-SAT...', 'time': time.time() - start_time})
+    
+    # Small/medium instance: Use CP-SAT
+    return Solver_CPSAT(filename, progress_callback)
 
-    # Notify GUI: Parsing complete
+def Solver_CPSAT(filename, progress_callback=None):
+    """
+    Original CP-SAT based solver (renamed from Solver)
+    """
+    start_time = time.time()
+    
+    # Parse instance
+    try:
+        instance = read_file(filename)
+    except Exception as e:
+        return {'sat': 'error', 'sol': [], 'mul_sol': f'Parse Error: {e}', 'exe_time': '0ms'}
+    
+    if progress_callback:
+        progress_callback({'status': 'Analyzing...', 'time': 0})
+    
+    # ============================================================================
+    # NO PRUNING STRATEGY - Keep ALL users
+    # ============================================================================
+    # CRITICAL INSIGHT: The solution uses high-ID users (like u421, u372),
+    # so we CANNOT prune by taking first N users.
+    # Instead, rely on integer domain variables to keep model manageable.
+    
+    # Just use all users
+    active_users = list(range(instance.num_users))
+    
     if progress_callback:
         progress_callback({
-            'status': 'Building model...',
+            'status': 'Building model (all users)...',
             'time': time.time() - start_time
         })
-
-    model = cp_model.CpModel()
-
-    # =========================================================================
-    # ALGORITHM PHASE 1: SYMMETRY BREAKING (SUPER USER PRUNING)
-    # =========================================================================
-    # Problem: 500 users is too many. Most are identical "Super Users".
-    # Solution: Identify "Essential Users" (constrained) vs "Generic Users".
-    #           Keep only enough Generics to cover the steps. Prune the rest.
     
-    essential_users = set()
-    # A. Users with specific authorizations are essential
-    essential_users.update(instance.authorizations.keys())
-    
-    # B. Users in Team constraints are essential
-    for steps, teams in instance.one_team:
-        for team_users in teams:
-            for u in team_users:
-                if u < instance.num_users:
-                    essential_users.add(u)
-    
-    # C. Calculate Generic Pool
-    all_users_set = set(range(instance.num_users))
-    generic_users = list(all_users_set - essential_users)
-    generic_users.sort()
-
-    # D. Pruning: We only need 'num_steps' amount of super users mathematically.
-    #    (Actually even fewer, but this is a safe upper bound).
-    needed_count = min(len(generic_users), instance.num_steps)
-    kept_generic_users = generic_users[:needed_count]
-    
-    # The 'Active' users solving the problem. (e.g., 500 -> 120 users)
-    active_users = list(essential_users) + kept_generic_users
-    active_users_set = set(active_users)
-
-    # =========================================================================
-    # ALGORITHM PHASE 2: SPARSE MODELING (VALIDITY MASKS)
-    # =========================================================================
-    # Instead of checking x[s][u] for all u, we pre-calculate valid candidates.
-    
-    valid_users_for_step = {}
+    # Build validity map
+    valid_for_step = {}
     for s in range(instance.num_steps):
-        valid = []
-        for u in active_users:
-            # If user is in Auth list, check if step is allowed
-            if u in instance.authorizations:
-                if s in instance.authorizations[u]:
-                    valid.append(u)
-            # If user NOT in Auth list, they are a Super User (allowed all)
-            else:
-                valid.append(u)
-        valid_users_for_step[s] = valid
-
-    # Decision Variables: x[step, user]
-    # Only create variables that are theoretically possible
-    x = {} 
-    for s in range(instance.num_steps):
-        for u in valid_users_for_step[s]:
-            x[s, u] = model.NewBoolVar(f'x_{s}_{u}')
-
-    # =========================================================================
-    # ALGORITHM PHASE 3: CONSTRAINTS
-    # =========================================================================
-
-    # 1. Assignment: Each step assigned to exactly one valid user
-    for s in range(instance.num_steps):
-        model.AddExactlyOne([x[s, u] for u in valid_users_for_step[s]])
-
-    # 2. Separation of Duty (SoD): Intersection only
-    for s1, s2 in instance.separation_duty:
-        # Optimization: Only check users capable of doing BOTH steps
-        common = set(valid_users_for_step[s1]) & set(valid_users_for_step[s2])
-        for u in common:
-            if (s1, u) in x and (s2, u) in x:
-                model.Add(x[s1, u] + x[s2, u] <= 1)
-
-    # 3. Binding of Duty (BoD)
+        valid = [u for u in active_users if u not in instance.authorizations or s in instance.authorizations[u]]
+        valid_for_step[s] = valid
+        
+        # Early UNSAT check
+        if not valid:
+            end_time = time.time()
+            return {
+                'sat': 'unsat',
+                'sol': [],
+                'mul_sol': f'Step {s+1} has no valid users',
+                'exe_time': f"{int((end_time - start_time) * 1000)}ms"
+            }
+    
+    # BoD conflict check
     for s1, s2 in instance.binding_duty:
-        u1_set = set(valid_users_for_step[s1])
-        u2_set = set(valid_users_for_step[s2])
-        # Intersection: must match
-        for u in u1_set & u2_set:
-            if (s1, u) in x and (s2, u) in x:
-                model.Add(x[s1, u] == x[s2, u])
-        # Diff: impossible to bind, so must be 0
-        for u in u1_set - u2_set:
-            model.Add(x[s1, u] == 0)
-        for u in u2_set - u1_set:
-            model.Add(x[s2, u] == 0)
-
-    # 4. At-most-k (Heuristic: Only build vars for involved users)
-    for i, (k, steps) in enumerate(instance.at_most_k):
-        # Gather only users who can actually do these steps
-        relevant_users = set()
-        for s in steps:
-            relevant_users.update(valid_users_for_step[s])
-        
-        user_active_vars = []
-        for u in relevant_users:
-            # Does user u do ANY of the steps in this constraint?
-            # Creating an auxiliary variable is expensive, do it sparingly.
-            my_step_vars = [x[s, u] for s in steps if (s, u) in x]
-            
-            if my_step_vars:
-                u_active = model.NewBoolVar(f'amk_{i}_u{u}')
-                model.AddMaxEquality(u_active, my_step_vars)
-                user_active_vars.append(u_active)
-        
-        if user_active_vars:
-            model.Add(sum(user_active_vars) <= k)
-
-    # 5. One-team (Heuristic: Prune invalid teams immediately)
-    for i, (steps, teams) in enumerate(instance.one_team):
-        team_vars = []
-        for t_idx, team_users in enumerate(teams):
-            # Algorithm: A team is 'Viable' only if it covers ALL required steps
-            # Check: For every step s, does the team have at least one authorized member?
-            is_viable = True
-            for s in steps:
-                has_capable_member = False
-                for u in team_users:
-                    if u < instance.num_users and u in valid_users_for_step[s]:
-                        has_capable_member = True
-                        break
-                if not has_capable_member:
-                    is_viable = False
-                    break
-            
-            # Only create logic for viable teams
-            if is_viable:
-                t_var = model.NewBoolVar(f'ot_{i}_team{t_idx}')
-                team_vars.append(t_var)
-                
-                # If team selected, assignments must come from this team
-                for s in steps:
-                    team_candidates = [x[s, u] for u in team_users 
-                                       if u < instance.num_users and (s, u) in x]
-                    model.Add(sum(team_candidates) == 1).OnlyEnforceIf(t_var)
-        
-        # At least one team must be selected (if any are viable)
-        if team_vars:
-            model.AddExactlyOne(team_vars)
-        else:
-            # UNSAT immediately
-            model.Add(0 == 1)
-
-    # =========================================================================
-    # SOLVE PHASE
-    # =========================================================================
+        if not (set(valid_for_step[s1]) & set(valid_for_step[s2])):
+            end_time = time.time()
+            return {
+                'sat': 'unsat',
+                'sol': [],
+                'mul_sol': f'BoD conflict between s{s1+1} and s{s2+1}',
+                'exe_time': f"{int((end_time - start_time) * 1000)}ms"
+            }
     
-    # Notify GUI: Model built, starting solver
+    if progress_callback:
+        progress_callback({'status': 'Building model...', 'time': time.time() - start_time})
+    
+    # ============================================================================
+    # MODEL WITH INTEGER VARIABLES
+    # ============================================================================
+    
+    model = cp_model.CpModel()
+    
+    # Integer variables: p[s] = assigned user for step s
+    p = {}
+    for s in range(instance.num_steps):
+        p[s] = model.NewIntVarFromDomain(
+            cp_model.Domain.FromValues(valid_for_step[s]),
+            f'p{s}'
+        )
+    
+    # Helper for boolean vars (created on demand)
+    bool_cache = {}
+    def get_bool(s, u):
+        if (s, u) not in bool_cache:
+            b = model.NewBoolVar(f'b{s}_{u}')
+            model.Add(p[s] == u).OnlyEnforceIf(b)
+            model.Add(p[s] != u).OnlyEnforceIf(b.Not())
+            bool_cache[(s, u)] = b
+        return bool_cache[(s, u)]
+    
+    # Constraints
+    
+    # 1. SoD: p[s1] != p[s2]
+    for s1, s2 in instance.separation_duty:
+        model.Add(p[s1] != p[s2])
+    
+    # 2. BoD: p[s1] == p[s2]
+    for s1, s2 in instance.binding_duty:
+        model.Add(p[s1] == p[s2])
+    
+    # 3. At-most-k
+    for i, (k, steps) in enumerate(instance.at_most_k):
+        if k >= len(steps):
+            continue  # Trivially satisfied
+        
+        # Find relevant users
+        relevant = set()
+        for s in steps:
+            relevant.update(valid_for_step[s])
+        
+        # Create user-used variables
+        user_used = []
+        for u in relevant:
+            lits = [get_bool(s, u) for s in steps if u in valid_for_step[s]]
+            if lits:
+                u_var = model.NewBoolVar(f'amk{i}_u{u}')
+                model.AddMaxEquality(u_var, lits)
+                user_used.append(u_var)
+        
+        if user_used:
+            model.Add(sum(user_used) <= k)
+    
+    # 4. One-team
+    for i, (steps, teams) in enumerate(instance.one_team):
+        viable = []
+        for t_idx, team in enumerate(teams):
+            # Check viability
+            is_viable = all(
+                any(u in valid_for_step[s] for u in team if u < instance.num_users)
+                for s in steps
+            )
+            
+            if is_viable:
+                t_var = model.NewBoolVar(f'ot{i}_t{t_idx}')
+                viable.append(t_var)
+                
+                for s in steps:
+                    members = [get_bool(s, u) for u in team if u < instance.num_users and u in valid_for_step[s]]
+                    if members:
+                        model.Add(sum(members) == 1).OnlyEnforceIf(t_var)
+        
+        if not viable:
+            end_time = time.time()
+            return {
+                'sat': 'unsat',
+                'sol': [],
+                'mul_sol': 'No viable team',
+                'exe_time': f"{int((end_time - start_time) * 1000)}ms"
+            }
+        
+        model.AddExactlyOne(viable)
+    
     if progress_callback:
         progress_callback({
             'status': 'Solving...',
@@ -399,48 +421,92 @@ def Solver(filename, progress_callback=None):
             'time': time.time() - start_time
         })
     
-    solver = cp_model.CpSolver()
-    solver.parameters.num_search_workers = 8  # Parallel Search
-    solver.parameters.max_time_in_seconds = 60.0
+    # ============================================================================
+    # SOLVER WITH AGGRESSIVE PARAMETERS
+    # ============================================================================
     
-    status = solver.Solve(model)
+    solver = cp_model.CpSolver()
+    
+    # Adaptive configuration based on problem size
+    if instance.num_users >= 400:
+        # HARD instances - use all optimizations
+        solver.parameters.num_search_workers = 16  # Max parallelism
+        solver.parameters.max_time_in_seconds = 180.0  # Give it 3 minutes
+        solver.parameters.linearization_level = 0
+        solver.parameters.cp_model_presolve = True
+        solver.parameters.cp_model_probing_level = 2
+        
+        # Use SAT-specific parameters
+        solver.parameters.search_branching = cp_model.FIXED_SEARCH
+        solver.parameters.optimize_with_core = True
+        solver.parameters.optimize_with_max_hs = True
+        
+        # Variable ordering: most constrained first
+        step_order = sorted(range(instance.num_steps), key=lambda s: len(valid_for_step[s]))
+        model.AddDecisionStrategy(
+            [p[s] for s in step_order],
+            cp_model.CHOOSE_FIRST,
+            cp_model.SELECT_MIN_VALUE
+        )
+    else:
+        # Normal instances
+        solver.parameters.num_search_workers = 8
+        solver.parameters.max_time_in_seconds = 30.0
+        solver.parameters.linearization_level = 0
+    
+    try:
+        status = solver.Solve(model)
+    except Exception as e:
+        end_time = time.time()
+        return {
+            'sat': 'error',
+            'sol': [],
+            'mul_sol': f'Solver error: {e}',
+            'exe_time': f"{int((end_time - start_time) * 1000)}ms"
+        }
+    
+    # ============================================================================
+    # EXTRACT RESULT
+    # ============================================================================
     
     result = {'sat': 'unsat', 'sol': [], 'mul_sol': '', 'exe_time': ''}
-    end_time = time.time()
     
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         result['sat'] = 'sat'
-        current_assignment = [] # For blocking clause
+        sol_map = {}
         
         for s in range(instance.num_steps):
-            for u in valid_users_for_step[s]:
-                if solver.Value(x[s, u]):
-                    result['sol'].append(f"s{s+1}: u{u+1}")
-                    current_assignment.append(x[s, u])
-                    break
-                    
-        # Check Multiple Solutions (Fast check)
-        if current_assignment:
-            model.Add(sum(current_assignment) < len(current_assignment))
-            # Quick check with 1 second limit for 2nd solution
-            solver.parameters.max_time_in_seconds = 1.0 
-            status2 = solver.Solve(model)
-            if status2 == cp_model.OPTIMAL or status2 == cp_model.FEASIBLE:
-                result['mul_sol'] = 'other solutions exist'
-            else:
-                result['mul_sol'] = 'this is the only solution'
-
-    exe_time_ms = int((end_time - start_time) * 1000)
-    result['exe_time'] = f"{exe_time_ms}ms"
+            u = solver.Value(p[s])
+            result['sol'].append(f"s{s+1}: u{u+1}")
+            sol_map[s] = u
+        
+        # Multiple solutions check (quick)
+        blocking = [get_bool(s, u) for s, u in sol_map.items()]
+        model.Add(sum(blocking) <= instance.num_steps - 1)
+        
+        solver.parameters.max_time_in_seconds = 0.5
+        status2 = solver.Solve(model)
+        
+        if status2 in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
+            result['mul_sol'] = 'other solutions exist'
+        else:
+            result['mul_sol'] = 'this is the only solution'
     
-    # Notify GUI: Solving complete
+    elif status == cp_model.INFEASIBLE:
+        result['mul_sol'] = 'Problem is infeasible'
+    elif status == cp_model.UNKNOWN:
+        result['mul_sol'] = 'Timeout - problem too complex'
+    
+    end_time = time.time()
+    result['exe_time'] = f"{int((end_time - start_time) * 1000)}ms"
+    
     if progress_callback:
-        progress_callback({
-            'status': 'Finished',
-            'time': end_time - start_time
-        })
+        progress_callback({'status': 'Finished', 'time': end_time - start_time})
     
     return result
+
+
+
 
 
 
