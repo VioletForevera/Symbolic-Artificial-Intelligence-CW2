@@ -18,16 +18,43 @@ def Solver(filename):
         exe_time = int((end_time - start_time) * 1000)
         return {'sat': 'error', 'sol': [], 'exe_time': f'{exe_time}ms'}
 
-    # Pre-processing: Identify "Super Users" and valid users for each step
-    super_users = [u for u in range(instance.num_users) if u not in instance.authorizations]
-
+    # ========== SUPER USER PRUNING ==========
+    # Step 1: Identify Essential Users (explicitly mentioned in constraints)
+    essential_users = set()
+    
+    # Users with explicit authorizations
+    for u in instance.authorizations.keys():
+        essential_users.add(u)
+    
+    # Users mentioned in one_team constraints
+    for (steps, teams) in instance.one_team:
+        for team_users in teams:
+            essential_users.update(team_users)
+    
+    # Step 2: Identify Generic Pool (users not explicitly constrained)
+    all_users = set(range(instance.num_users))
+    generic_users = all_users - essential_users
+    
+    # Step 3: Prune Generic Users
+    # We only need at most num_steps generic users (since there are only that many steps)
+    # Keep the first num_steps generic users by sorted ID
+    kept_generic_users = sorted(list(generic_users))[:instance.num_steps]
+    
+    # Step 4: Define Active Users
+    active_users = essential_users | set(kept_generic_users)
+    
+    # Step 5: Build step_to_users ONLY for active users
+    # Identify which active users have no explicit authorizations (super users among active)
+    super_users = [u for u in active_users if u not in instance.authorizations]
+    
     # Map step -> set of valid users (Optimization: strictly authorized + super users)
     # Note: instance.authorizations is u -> [s1, s2...]
     # We want s -> [u1, u2...]
     step_to_users = {s: set(super_users) for s in range(instance.num_steps)}
     for u, steps in instance.authorizations.items():
-        for s in steps:
-            step_to_users[s].add(u)
+        if u in active_users:  # Only consider active users
+            for s in steps:
+                step_to_users[s].add(u)
 
     model = cp_model.CpModel()
     
