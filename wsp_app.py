@@ -5,7 +5,7 @@ import os
 import sys
 import threading
 import tkinter as tk
-from tkinter import filedialog, scrolledtext
+from tkinter import filedialog, scrolledtext, ttk
 from ortools.sat.python import cp_model
 
 # ==========================================
@@ -177,48 +177,89 @@ def read_file(filename):
 # PART 2: Solver Logic (from create_wsp_solver.py)
 # ==========================================
 
-def Solver(filename):
+class SolutionCallback(cp_model.CpSolverSolutionCallback):
+    """Callback to monitor solver progress"""
+    def __init__(self, progress_callback=None):
+        cp_model.CpSolverSolutionCallback.__init__(self)
+        self.progress_callback = progress_callback
+        self.solution_count = 0
+        self.start_time = time.time()
+        self.last_update_time = self.start_time
+        
+    def on_solution_callback(self):
+        """Called when a new solution is found"""
+        self.solution_count += 1
+        elapsed = time.time() - self.start_time
+        
+        if self.progress_callback:
+            # Try to get objective value, but WSP is usually a satisfaction problem (no objective)
+            objective = None
+            try:
+                objective = self.ObjectiveValue()
+            except:
+                pass  # No objective function, which is normal for WSP
+            
+            info = {
+                'solutions': self.solution_count,
+                'time': elapsed,
+                'objective': objective,
+                'status': f'Found solution #{self.solution_count}'
+            }
+            self.progress_callback(info)
+            self.last_update_time = time.time()
+    
+    def get_stats(self):
+        """Get current solver statistics"""
+        elapsed = time.time() - self.start_time
+        return {
+            'solutions': self.solution_count,
+            'time': elapsed,
+            'status': 'Searching...' if self.solution_count == 0 else f'Found {self.solution_count} solution(s)'
+        }
+
+def Solver(filename, progress_callback=None):
     """
     Optimized WSP Solver for wsp_app.py with Super User Pruning.
-    Solves 500-user hard instances in < 5 seconds.
+    FIXED: One-team user extraction logic.
     """
     start_time = time.time()
     
-    # --- 1. Parse Instance (Inline or helper) ---
+    # --- 1. Parse Instance ---
     try:
-        # Try using the internal read_file if available, otherwise try importing
-        if 'read_file' in globals():
-            instance = read_file(filename)
-        else:
-            from wsp_parser import read_file
-            instance = read_file(filename)
+        # read_file is defined in this same file, so use it directly
+        instance = read_file(filename)
     except Exception as e:
         return {'sat': 'error', 'sol': [], 'mul_sol': str(e), 'exe_time': '0ms'}
     
     model = cp_model.CpModel()
     
-    # --- 2. SUPER USER PRUNING (The Critical Fix) ---
-    # We identify users who are effectively identical "Super Users" and remove the excess.
+    # --- 2. SUPER USER PRUNING (Optimization) ---
+    # Goal: Identify users who are mathematically identical "Super Users" and remove excess ones.
     
-    # A. Find "Essential Users" (Those mentioned in constraints)
+    # A. Find "Essential Users" (Those explicitly mentioned in constraints)
     essential_users = set(instance.authorizations.keys())
-    for steps, team_users in instance.one_team:
-        for u in team_users:
-            if u < instance.num_users:
-                essential_users.add(u)
     
-    # B. Find "Generic Users" (Super Users)
+    # FIXED LOGIC HERE: Correctly iterate through teams
+    for steps, teams in instance.one_team:
+        for team_users in teams:     # Iterate through each team (which is a list of users)
+            for u in team_users:     # Iterate through users in that team
+                if u < instance.num_users: 
+                    essential_users.add(u)
+    
+    # B. Find "Generic Users" (Implicit Super Users not in constraints)
     all_users_set = set(range(instance.num_users))
     generic_users = list(all_users_set - essential_users)
     generic_users.sort()
-    
-    # C. Prune: We only need enough super users to cover the steps (Pigeonhole principle)
-    # If there are 60 steps, keeping 60 generic users is mathematically sufficient.
+
+    # C. Prune: We only need enough super users to potentially cover all steps.
+    # If there are 60 steps, 60 super users are sufficient. 
+    # Keeping 400+ super users is what killed the performance before.
     needed_generic_count = min(len(generic_users), instance.num_steps)
     kept_generic_users = generic_users[:needed_generic_count]
     
     # D. Define the "Active Universe" for the solver
     active_users = list(essential_users) + kept_generic_users
+    # active_users_set = set(active_users) # Not strictly needed but good for reference
     
     # --- 3. BUILD SPARSE MAPS ---
     # valid_users_for_step[s] will ONLY contain users from our pruned 'active_users' list
@@ -226,17 +267,18 @@ def Solver(filename):
     for s in range(instance.num_steps):
         valid = []
         for u in active_users:
-            # If u is in authorizations, check if s is allowed.
-            # If u is NOT in authorizations (Super User), they allow everything.
+            # Check Authorization:
+            # 1. If user is in auth dict, step MUST be in their list.
+            # 2. If user is NOT in auth dict (Super User), they can do anything.
             if u in instance.authorizations:
                 if s in instance.authorizations[u]:
                     valid.append(u)
             else:
-                valid.append(u)  # Implicit Super User permission
+                valid.append(u) # Implicit Super User permission
         valid_users_for_step[s] = valid
     
     # --- 4. CREATE VARIABLES (Sparse) ---
-    x = {}  # x[s, u]
+    x = {} # x[s, u] -> boolean variable
     for s in range(instance.num_steps):
         for u in valid_users_for_step[s]:
             x[s, u] = model.NewBoolVar(f'x_s{s}_u{u}')
@@ -244,27 +286,38 @@ def Solver(filename):
     # --- 5. CONSTRAINTS ---
     # (A) Assignment: Each step has exactly one user
     for s in range(instance.num_steps):
-        model.AddExactlyOne([x[s, u] for u in valid_users_for_step[s]])
+        step_vars = [x[s, u] for u in valid_users_for_step[s]]
+        if not step_vars:
+            # No valid users for this step -> UNSAT
+            result = {'sat': 'unsat', 'sol': [], 'mul_sol': f'No valid users for step {s+1}', 'exe_time': ''}
+            end_time = time.time()
+            result['exe_time'] = f"{int((end_time - start_time) * 1000)}ms"
+            return result
+        model.AddExactlyOne(step_vars)
     
     # (B) SoD: x[s1, u] + x[s2, u] <= 1
     for s1, s2 in instance.separation_duty:
         # Only iterate intersection of valid users (Fast!)
         common = set(valid_users_for_step[s1]) & set(valid_users_for_step[s2])
         for u in common:
-            model.Add(x[s1, u] + x[s2, u] <= 1)
+            if (s1, u) in x and (s2, u) in x:
+                model.Add(x[s1, u] + x[s2, u] <= 1)
     
     # (C) BoD: x[s1, u] == x[s2, u]
     for s1, s2 in instance.binding_duty:
         u1_set = set(valid_users_for_step[s1])
         u2_set = set(valid_users_for_step[s2])
-        # Users in both sets must match
+        
+        # Users in both sets must match status
         for u in u1_set & u2_set:
-            model.Add(x[s1, u] == x[s2, u])
-        # Users unique to one set must be 0
+            if (s1, u) in x and (s2, u) in x:
+                model.Add(x[s1, u] == x[s2, u])
+                
+        # Users unique to one set must be 0 (cannot be assigned)
         for u in u1_set - u2_set:
-            model.Add(x[s1, u] == 0)
+             if (s1, u) in x: model.Add(x[s1, u] == 0)
         for u in u2_set - u1_set:
-            model.Add(x[s2, u] == 0)
+             if (s2, u) in x: model.Add(x[s2, u] == 0)
     
     # (D) At-most-k (Optimized Loop)
     for i, (k, steps) in enumerate(instance.at_most_k):
@@ -273,47 +326,130 @@ def Solver(filename):
         for s in steps:
             involved_users.update(valid_users_for_step[s])
         
-        # 2. Only create auxiliary variables for these few users
+        # 2. Only create auxiliary variables for these relevant users
         used_vars = []
         for u in involved_users:
+            # Collect x[s,u] for all steps in this constraint
             step_vars = [x[s, u] for s in steps if (s, u) in x]
+            
             if step_vars:
                 u_active = model.NewBoolVar(f'amk_{i}_u{u}')
                 model.AddMaxEquality(u_active, step_vars)
                 used_vars.append(u_active)
-        model.Add(sum(used_vars) <= k)
+        
+        if used_vars:
+            model.Add(sum(used_vars) <= k)
     
-    # (E) One-team (Optimized Loop)
+    # (E) One-team (Optimized Loop with pre-computed capabilities)
     for i, (steps, teams) in enumerate(instance.one_team):
         team_vars = []
+        team_capabilities = {}  # Pre-compute which teams can do which steps
+        
         for t_idx, team_users in enumerate(teams):
             # Optimization: Check if team is viable FIRST
+            # A team is viable if for every step, there is at least one member who can do it.
             is_viable = True
+            team_capabilities[t_idx] = {}
+            
             for s in steps:
-                # Can ANYone in the team do step s?
-                can_do = any((u < instance.num_users and u in valid_users_for_step[s]) for u in team_users)
-                if not can_do:
+                capable_users_vars = []
+                for u in team_users:
+                    if u < instance.num_users and (s, u) in x:
+                        capable_users_vars.append(x[s, u])
+                
+                if capable_users_vars:
+                    team_capabilities[t_idx][s] = capable_users_vars
+                else:
                     is_viable = False
                     break
             
             if is_viable:
                 t_var = model.NewBoolVar(f'ot_{i}_t{t_idx}')
                 team_vars.append(t_var)
-                # Enforce team logic
+                
+                # If this team is selected (t_var=1), then for each step, 
+                # exactly one user FROM THIS TEAM must be assigned.
                 for s in steps:
-                    capable_users = [x[s, u] for u in team_users if u < instance.num_users and (s, u) in x]
-                    model.Add(sum(capable_users) == 1).OnlyEnforceIf(t_var)
+                    capable_users_vars = team_capabilities[t_idx][s]
+                    # Use OnlyEnforceIf for better propagation
+                    model.Add(sum(capable_users_vars) == 1).OnlyEnforceIf(t_var)
             
         if team_vars:
             model.AddExactlyOne(team_vars)
         else:
-            model.Add(0 == 1)  # Problem is UNSAT if no team can do it
+            # No team can satisfy the requirements -> UNSAT
+            result = {'sat': 'unsat', 'sol': [], 'mul_sol': 'no viable teams', 'exe_time': ''}
+            end_time = time.time()
+            result['exe_time'] = f"{int((end_time - start_time) * 1000)}ms"
+            return result
     
     # --- 6. SOLVE ---
     solver = cp_model.CpSolver()
-    solver.parameters.num_search_workers = 8  # Parallel power
-    solver.parameters.max_time_in_seconds = 30.0  # Safety limit
-    status = solver.Solve(model)
+    
+    # Create callback if progress monitoring is requested
+    callback = None
+    if progress_callback:
+        callback = SolutionCallback(progress_callback)
+    
+    # Optimize solver parameters for hard instances
+    solver.parameters.num_search_workers = 8  # Parallel search
+    
+    # Set timeout for hard instances (5 minutes)
+    if instance.num_steps >= 50 or instance.num_constraints >= 500:
+        solver.parameters.max_time_in_seconds = 300.0
+        # Use portfolio search for hard instances (tries multiple strategies)
+        solver.parameters.search_branching = cp_model.PORTFOLIO_SEARCH
+        # Better linearization for complex constraints
+        solver.parameters.linearization_level = 2
+    else:
+        # Shorter timeout for easier instances
+        solver.parameters.max_time_in_seconds = 30.0
+    
+    # Update progress callback with solver stats
+    if callback and progress_callback:
+        progress_callback({
+            'status': 'Starting solver...',
+            'num_vars': len(model.Proto().variables),
+            'num_constraints': len(model.Proto().constraints),
+            'time': 0
+        })
+    
+    # Start periodic progress updates in a separate thread
+    progress_stop_event = threading.Event()
+    if callback and progress_callback:
+        def periodic_update():
+            while not progress_stop_event.is_set():
+                time.sleep(0.5)  # Update every 500ms
+                if not progress_stop_event.is_set():
+                    stats = callback.get_stats()
+                    stats['num_vars'] = len(model.Proto().variables)
+                    stats['num_constraints'] = len(model.Proto().constraints)
+                    progress_callback(stats)
+        
+        progress_thread = threading.Thread(target=periodic_update, daemon=True)
+        progress_thread.start()
+    
+    # solver.parameters.log_search_progress = True # Uncomment for debugging
+    
+    # Solve with callback
+    try:
+        if callback:
+            status = solver.Solve(model, callback)
+        else:
+            status = solver.Solve(model)
+    finally:
+        # Stop periodic updates
+        if callback:
+            progress_stop_event.set()
+    
+    # Final progress update
+    if callback and progress_callback:
+        elapsed = time.time() - callback.start_time
+        progress_callback({
+            'status': 'Finished',
+            'time': elapsed,
+            'solutions': callback.solution_count
+        })
     
     # --- 7. OUTPUT ---
     result = {'sat': 'unsat', 'sol': [], 'mul_sol': '', 'exe_time': ''}
@@ -324,22 +460,34 @@ def Solver(filename):
         
         # Reconstruct solution map
         for s in range(instance.num_steps):
-            # We only iterate valid_users_for_step, ensuring we don't miss anyone
             for u in valid_users_for_step[s]:
                 if solver.Value(x[s, u]):
-                    # Convert 0-index back to 1-index for output strings
+                    # Convert 0-index back to 1-index strings
                     result['sol'].append(f"s{s+1}: u{u+1}")
                     current_assignment.append(x[s, u])
                     break
         
-        # Check for multiple solutions (blocking clause)
-        if len(current_assignment) > 0:
-            model.Add(sum(current_assignment) < len(current_assignment))
-            status2 = solver.Solve(model)
-            if status2 == cp_model.OPTIMAL or status2 == cp_model.FEASIBLE:
-                result['mul_sol'] = 'other solutions exist'
-            else:
-                result['mul_sol'] = 'this is the only solution'
+        # Check for multiple solutions (blocking clause) - skip for hard instances to save time
+        if instance.num_steps < 50 and instance.num_constraints < 500:
+            # Force at least one assignment to change
+            if current_assignment:
+                model.Add(sum(current_assignment) < len(current_assignment))
+                status2 = solver.Solve(model)
+                if status2 == cp_model.OPTIMAL or status2 == cp_model.FEASIBLE:
+                    result['mul_sol'] = 'other solutions exist'
+                else:
+                    result['mul_sol'] = 'this is the only solution'
+        else:
+            result['mul_sol'] = 'solution found (multiple solution check skipped for performance)'
+    elif status == cp_model.MODEL_INVALID:
+        result['sat'] = 'error'
+        result['mul_sol'] = 'Model is invalid'
+    elif status == cp_model.INFEASIBLE:
+        result['sat'] = 'unsat'
+        result['mul_sol'] = 'Problem is infeasible'
+    elif status == cp_model.UNKNOWN:
+        result['sat'] = 'unknown'
+        result['mul_sol'] = 'Solver could not determine satisfiability (may have timed out)'
     
     end_time = time.time()
     result['exe_time'] = f"{int((end_time - start_time) * 1000)}ms"
@@ -411,11 +559,25 @@ class WSPApp:
         self.btn_batch = tk.Button(action_frame, text="Run Batch Analysis", command=self.run_batch, bg="#dddddd")
         self.btn_batch.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 0))
 
+        # --- Progress Frame ---
+        progress_frame = tk.Frame(root, pady=5)
+        progress_frame.pack(side=tk.TOP, fill=tk.X, padx=10)
+        
+        self.lbl_progress_status = tk.Label(progress_frame, text="Ready", anchor="w", font=("Arial", 9))
+        self.lbl_progress_status.pack(side=tk.TOP, fill=tk.X)
+        
+        self.progress_bar = ttk.Progressbar(progress_frame, mode='indeterminate', length=300)
+        self.progress_bar.pack(side=tk.TOP, fill=tk.X, pady=(5, 0))
+        
+        self.lbl_progress_info = tk.Label(progress_frame, text="", anchor="w", font=("Arial", 8), fg="gray")
+        self.lbl_progress_info.pack(side=tk.TOP, fill=tk.X)
+
         # --- Bottom Frame: Output ---
         self.txt_output = scrolledtext.ScrolledText(root, state='disabled', font=("Consolas", 10))
         self.txt_output.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
         
         self.selected_file_path = None
+        self.solving = False
 
     def browse_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")])
@@ -425,9 +587,21 @@ class WSPApp:
             self.btn_run.config(state=tk.NORMAL)
 
     def run_solver(self):
-        if not self.selected_file_path:
+        if not self.selected_file_path or self.solving:
             return
-            
+        
+        self.solving = True
+        self.btn_run.config(state=tk.DISABLED)
+        self.btn_batch.config(state=tk.DISABLED)
+        
+        # Reset progress
+        self.lbl_progress_status.config(text="Initializing...", fg="black")
+        self.lbl_progress_info.config(text="")
+        self.progress_bar.stop()
+        self.progress_bar['mode'] = 'indeterminate'
+        self.progress_bar['value'] = 0
+        self.progress_bar.start(10)
+        
         self.txt_output.configure(state='normal')
         self.txt_output.delete(1.0, tk.END)
         self.txt_output.insert(tk.END, f"Solving {os.path.basename(self.selected_file_path)}...\n")
@@ -435,11 +609,62 @@ class WSPApp:
         
         # Threading to prevent GUI freeze
         t = threading.Thread(target=self._solve_thread)
+        t.daemon = True
         t.start()
+    
+    def _update_progress(self, info):
+        """Thread-safe progress update"""
+        def update():
+            status = info.get('status', 'Running...')
+            
+            # Update status label with color coding
+            if 'Error' in status or 'error' in status.lower():
+                self.lbl_progress_status.config(text=status, fg="red")
+            elif 'Finished' in status:
+                self.lbl_progress_status.config(text=status, fg="green")
+            elif 'Found solution' in status:
+                self.lbl_progress_status.config(text=status, fg="blue")
+            else:
+                self.lbl_progress_status.config(text=status, fg="black")
+            
+            # Build info string
+            info_parts = []
+            if 'num_vars' in info:
+                info_parts.append(f"Variables: {info['num_vars']}")
+            if 'num_constraints' in info:
+                info_parts.append(f"Constraints: {info['num_constraints']}")
+            if 'solutions' in info and info['solutions'] > 0:
+                info_parts.append(f"Solutions: {info['solutions']}")
+            if 'time' in info:
+                elapsed = info['time']
+                if elapsed > 0:
+                    info_parts.append(f"Time: {elapsed:.2f}s")
+            
+            if info_parts:
+                self.lbl_progress_info.config(text=" | ".join(info_parts))
+            
+            # Update progress bar
+            if status == 'Finished':
+                self.progress_bar.stop()
+                self.progress_bar['mode'] = 'determinate'
+                self.progress_bar['value'] = 100
+            elif status == 'Starting solver...':
+                self.progress_bar['mode'] = 'indeterminate'
+                self.progress_bar.start(10)
+            elif 'Found solution' in status:
+                # Keep indeterminate mode while searching for more solutions
+                if self.progress_bar['mode'] != 'indeterminate':
+                    self.progress_bar['mode'] = 'indeterminate'
+                    self.progress_bar.start(10)
+        
+        self.root.after(0, update)
         
     def _solve_thread(self):
         try:
-            result = Solver(self.selected_file_path)
+            result = Solver(self.selected_file_path, progress_callback=self._update_progress)
+            
+            # Update progress to finished
+            self._update_progress({'status': 'Finished', 'time': float(result['exe_time'].replace('ms', '')) / 1000})
             
             output_text = "\n--- Results ---\n"
             output_text += f"Status: {result['sat']}\n"
@@ -448,13 +673,24 @@ class WSPApp:
                 output_text += "Assignments:\n"
                 for line in result['sol']:
                     output_text += f"  {line}\n"
+                if result.get('mul_sol'):
+                    output_text += f"\n{result['mul_sol']}\n"
+            elif result['sat'] == 'error':
+                output_text += f"Error: {result.get('mul_sol', 'Unknown error')}\n"
             else:
-                 output_text += "No solution found.\n"
+                output_text += "No solution found.\n"
+                if result.get('mul_sol'):
+                    output_text += f"{result['mul_sol']}\n"
                  
             self._safe_print(output_text)
             
         except Exception as e:
-            self._safe_print(f"Error: {str(e)}")
+            self._update_progress({'status': 'Error', 'time': 0})
+            self._safe_print(f"Error: {str(e)}\n")
+        finally:
+            self.solving = False
+            self.root.after(0, lambda: self.btn_run.config(state=tk.NORMAL))
+            self.root.after(0, lambda: self.btn_batch.config(state=tk.NORMAL))
 
     def run_batch(self):
         self.txt_output.configure(state='normal')

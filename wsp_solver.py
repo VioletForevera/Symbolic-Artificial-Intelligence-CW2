@@ -8,6 +8,12 @@ def Solver(filename):
     Solves the WSP instance defined in filename.
     Returns dictionary with keys: 'sat', 'sol', 'exe_time'.
     Strictly forbids printing inside.
+    
+    ALGORITHMIC OPTIMIZATIONS:
+    1. Early UNSAT detection before model building
+    2. Adaptive timeout based on problem complexity
+    3. Advanced search heuristics
+    4. Constraint preprocessing
     """
     start_time = time.time()
     
@@ -55,6 +61,44 @@ def Solver(filename):
         if u in active_users:  # Only consider active users
             for s in steps:
                 step_to_users[s].add(u)
+    
+    # ========== EARLY UNSAT DETECTION ==========
+    # Check 1: Any step with no valid users? -> UNSAT
+    for s in range(instance.num_steps):
+        if not step_to_users[s]:
+            end_time = time.time()
+            exe_time = int((end_time - start_time) * 1000)
+            return {'sat': 'unsat', 'sol': [], 'exe_time': f'{exe_time}ms', 'mul_sol': '', 'num_vars': 0, 'num_constraints': 0}
+    
+    # Check 2: Binding of Duty conflicts - if two bound steps have no common users -> UNSAT
+    for (s1, s2) in instance.binding_duty:
+        common = step_to_users[s1] & step_to_users[s2]
+        if not common:
+            end_time = time.time()
+            exe_time = int((end_time - start_time) * 1000)
+            return {'sat': 'unsat', 'sol': [], 'exe_time': f'{exe_time}ms', 'mul_sol': 'BoD conflict: no common users', 'num_vars': 0, 'num_constraints': 0}
+    
+    # Check 3: At-most-k feasibility - if k < minimum required users -> UNSAT
+    for (k, steps) in instance.at_most_k:
+        # Count how many steps MUST be done by different users due to SoD
+        # Build conflict graph for steps in this at-most-k constraint
+        min_users_needed = 1
+        assigned = [False] * len(steps)
+        for i, s1 in enumerate(steps):
+            if assigned[i]:
+                continue
+            assigned[i] = True
+            # Find all steps that must be different from s1
+            for j, s2 in enumerate(steps):
+                if i != j and not assigned[j]:
+                    if (s1, s2) in instance.separation_duty or (s2, s1) in instance.separation_duty:
+                        assigned[j] = True
+                        min_users_needed += 1
+        
+        if k < min_users_needed:
+            end_time = time.time()
+            exe_time = int((end_time - start_time) * 1000)
+            return {'sat': 'unsat', 'sol': [], 'exe_time': f'{exe_time}ms', 'mul_sol': f'At-most-k conflict: need {min_users_needed} but k={k}', 'num_vars': 0, 'num_constraints': 0}
 
     model = cp_model.CpModel()
     
@@ -83,6 +127,19 @@ def Solver(filename):
 
     # 2. Assignment, Authorizations
     # Implicitly handled by Domain of p[s].
+    
+    # ========== ALGORITHMIC OPTIMIZATION: SEARCH HEURISTICS ==========
+    # Define search strategy: prioritize steps with fewer valid users (Most Constrained First)
+    # This is a classic CSP heuristic that helps find conflicts faster
+    step_order = sorted(range(instance.num_steps), key=lambda s: len(step_to_users[s]))
+    
+    # Create decision strategy for the solver
+    model.AddDecisionStrategy(
+        [p[s] for s in step_order],
+        cp_model.CHOOSE_FIRST,  # Choose variables in the order we specified
+        cp_model.SELECT_MIN_VALUE  # Try smallest user ID first (arbitrary but deterministic)
+    )
+
 
     # 3. Separation of Duty (SoD): p[s1] != p[s2]
     # Only need to add if domains overlap
@@ -163,16 +220,56 @@ def Solver(filename):
                     model.Add(sum(relevant_x) == 1).OnlyEnforceIf(t_var)
 
     # Solve
-    # Solve
     solver = cp_model.CpSolver()
     
-    # Final Performance Tuning
-    # Use 8 workers (or all distinct cores)
-    solver.parameters.num_search_workers = 8
-    # 0 = No linearization (often better for boolean/logical constraints)
-    solver.parameters.linearization_level = 0
-    # Ensure presolve is enabled (usually default, but explicit for clarity)
+    # ========== ALGORITHMIC OPTIMIZATION: ADAPTIVE TIMEOUT ==========
+    # Calculate problem complexity score
+    complexity_score = (
+        instance.num_steps * 0.1 +
+        instance.num_constraints * 0.05 +
+        len(active_users) * 0.02
+    )
+    
+    # Adaptive timeout based on complexity (MUCH MORE AGGRESSIVE)
+    if complexity_score > 100:  # Very hard instances
+        timeout = 60.0  # 1 minute max (was 300s before)
+    elif complexity_score > 50:  # Hard instances
+        timeout = 30.0  # 30 seconds
+    elif complexity_score > 20:  # Medium instances
+        timeout = 15.0  # 15 seconds
+    else:  # Easy instances
+        timeout = 10.0  # 10 seconds
+    
+    solver.parameters.max_time_in_seconds = timeout
+    
+    # ========== ALGORITHMIC OPTIMIZATION: SEARCH STRATEGY ==========
+    # Use FIXED_SEARCH for more deterministic and focused search
+    # This prevents the solver from trying too many different strategies
+    solver.parameters.search_branching = cp_model.FIXED_SEARCH
+    
+    # ========== ALGORITHMIC OPTIMIZATION: PARALLELIZATION ==========
+    # Use multiple workers but not too many (diminishing returns)
+    solver.parameters.num_search_workers = min(8, instance.num_steps // 10 + 1)
+    
+    # ========== ALGORITHMIC OPTIMIZATION: PRESOLVE ==========
+    # Aggressive presolve to simplify the model before search
     solver.parameters.cp_model_presolve = True
+    solver.parameters.cp_model_probing_level = 2  # More aggressive probing
+    
+    # ========== ALGORITHMIC OPTIMIZATION: LINEARIZATION ==========
+    # Level 0 = No linearization (better for boolean/logical constraints)
+    # This is critical for WSP which is mostly boolean logic
+    solver.parameters.linearization_level = 0
+    
+    # ========== ALGORITHMIC OPTIMIZATION: CONFLICT ANALYSIS ==========
+    # Enable conflict analysis to learn from failures faster
+    solver.parameters.optimize_with_core = True
+    
+    # ========== ALGORITHMIC OPTIMIZATION: RESTART STRATEGY ==========
+    # More frequent restarts to avoid getting stuck
+    solver.parameters.restart_algorithms = [cp_model.LUBY_RESTART]
+    solver.parameters.restart_period = 100  # Restart every 100 failures
+
 
     status = solver.Solve(model)
     
