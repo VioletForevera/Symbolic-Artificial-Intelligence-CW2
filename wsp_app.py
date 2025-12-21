@@ -178,105 +178,155 @@ def read_file(filename):
 # ==========================================
 
 def Solver(filename):
-    """
-    Solves the WSP instance defined in filename.
-    Returns dictionary with keys: 'sat', 'sol', 'exe_time'.
-    """
     start_time = time.time()
-    
     try:
         instance = read_file(filename)
     except Exception as e:
-        end_time = time.time()
-        exe_time = int((end_time - start_time) * 1000)
-        return {'sat': 'error', 'sol': [], 'exe_time': f'{exe_time}ms'}
-
+        return {'sat': 'error', 'sol': [], 'mul_sol': '', 'exe_time': '0ms'}
+    
     model = cp_model.CpModel()
     
-    # Decision Variables: x[s, u]
-    x = {}
-    for s in range(instance.num_steps):
-        for u in range(instance.num_users):
-            x[s, u] = model.NewBoolVar(f'x_s{s}_u{u}')
-            
-    # 1. Assignment Constraint
-    for s in range(instance.num_steps):
-        model.AddExactlyOne([x[s, u] for u in range(instance.num_users)])
-        
-    # 2. Authorization Constraint
-    for u in range(instance.num_users):
-        if u in instance.authorizations:
-            allowed_steps = set(instance.authorizations[u])
-            for s in range(instance.num_steps):
-                if s not in allowed_steps:
-                    model.Add(x[s, u] == 0)
+    # --- 1. SUPER USER PRUNING (The Fix for Hard Instances) ---
+    # Identify users who MUST be there (mentioned in constraints)
+    essential_users = set(instance.authorizations.keys())
+    for steps, team_users in instance.one_team:
+        for u in team_users:
+            if u < instance.num_users: # Safety check
+                essential_users.add(u)
     
-    # 3. SoD
-    for (s1, s2) in instance.separation_duty:
-        for u in range(instance.num_users):
+    # Identify "Super Users" (mathematically identical placeholders)
+    all_users_set = set(range(instance.num_users))
+    generic_users = list(all_users_set - essential_users)
+    generic_users.sort()
+    
+    # We only need enough super users to cover the steps. 
+    # If there are 60 steps, 60 super users are enough. 300 is wasteful.
+    needed_generic = generic_users[:instance.num_steps]
+    active_users = list(essential_users) + needed_generic
+    active_users_set = set(active_users)
+    
+    # --- 2. BUILD SPARSE MAPS ---
+    # Only map valid users. If a user is not in 'active_users', they don't exist in the model.
+    valid_users_for_step = {}
+    for s in range(instance.num_steps):
+        valid = []
+        for u in active_users:
+            # Logic: If u is in authorizations, check if s is allowed.
+            # If u is NOT in authorizations (Super User), they are allowed everything.
+            if u in instance.authorizations:
+                if s in instance.authorizations[u]:
+                    valid.append(u)
+            else:
+                valid.append(u) # Super user
+        valid_users_for_step[s] = valid
+    
+    # --- 3. CREATE VARIABLES ---
+    x = {} # x[s, u]
+    for s in range(instance.num_steps):
+        for u in valid_users_for_step[s]:
+            x[s, u] = model.NewBoolVar(f'x_{s}_{u}')
+    
+    # --- 4. CONSTRAINTS ---
+    # (A) Assignment: Each step has exactly one user
+    for s in range(instance.num_steps):
+        model.AddExactlyOne([x[s, u] for u in valid_users_for_step[s]])
+    
+    # (B) SoD: x[s1, u] + x[s2, u] <= 1
+    for s1, s2 in instance.separation_duty:
+        common = set(valid_users_for_step[s1]) & set(valid_users_for_step[s2])
+        for u in common:
             model.Add(x[s1, u] + x[s2, u] <= 1)
-            
-    # 4. BoD
-    for (s1, s2) in instance.binding_duty:
-        for u in range(instance.num_users):
-            model.Add(x[s1, u] == x[s2, u])
-
-    # 5. At-most-k
+    
+    # (C) BoD: x[s1, u] == x[s2, u]
+    for s1, s2 in instance.binding_duty:
+        u1 = set(valid_users_for_step[s1])
+        u2 = set(valid_users_for_step[s2])
+        for u in u1 | u2:
+            if u in u1 and u in u2:
+                model.Add(x[s1, u] == x[s2, u])
+            elif u in u1:
+                model.Add(x[s1, u] == 0)
+            elif u in u2:
+                model.Add(x[s2, u] == 0)
+    
+    # (D) At-most-k (Optimized Loop)
     for i, (k, steps) in enumerate(instance.at_most_k):
-        user_used = []
-        for u in range(instance.num_users):
-            u_var = model.NewBoolVar(f'amk_{i}_u{u}')
-            model.AddMaxEquality(u_var, [x[s, u] for s in steps])
-            user_used.append(u_var)
-        model.Add(sum(user_used) <= k)
-
-    # 6. One-team
+        # Only create vars for users relevant to these steps
+        relevant_users = set()
+        for s in steps:
+            relevant_users.update(valid_users_for_step[s])
+        
+        used_vars = []
+        for u in relevant_users:
+            # Does user u do ANY of the steps?
+            step_vars = [x[s, u] for s in steps if (s, u) in x]
+            if step_vars:
+                u_active = model.NewBoolVar(f'amk_{i}_u{u}')
+                model.AddMaxEquality(u_active, step_vars)
+                used_vars.append(u_active)
+        model.Add(sum(used_vars) <= k)
+    
+    # (E) One-team
     for i, (steps, teams) in enumerate(instance.one_team):
-        team_vars = [model.NewBoolVar(f'ot_{i}_t{t}') for t in range(len(teams))]
-        model.AddExactlyOne(team_vars)
+        team_vars = []
         for t_idx, team_users in enumerate(teams):
+            # Optimization: Check if team is viable
+            is_viable = True
             for s in steps:
-                valid_users = [x[s, u] for u in team_users if u < instance.num_users]
-                model.Add(sum(valid_users) == 1).OnlyEnforceIf(team_vars[t_idx])
-
-    # Solve
+                # Can ANYone in the team do step s?
+                can_do = False
+                for u in team_users:
+                    if u < instance.num_users and u in valid_users_for_step[s]:
+                        can_do = True
+                        break
+                if not can_do:
+                    is_viable = False
+                    break
+            
+            if is_viable:
+                t_var = model.NewBoolVar(f'ot_{i}_t{t_idx}')
+                team_vars.append(t_var)
+                # Enforce team logic
+                for s in steps:
+                    # Users in this team who can do step s
+                    capable = [x[s, u] for u in team_users if u < instance.num_users and (s, u) in x]
+                    model.Add(sum(capable) == 1).OnlyEnforceIf(t_var)
+            # If not viable, we just don't create t_var, effectively 0
+            
+        if team_vars:
+            model.AddExactlyOne(team_vars)
+        else:
+            model.Add(0 == 1) # Impossible instance
+    
+    # --- 5. SOLVE ---
     solver = cp_model.CpSolver()
+    # Enable multithreading
+    solver.parameters.num_search_workers = 8
     status = solver.Solve(model)
     
-    result = {
-        'sat': 'unsat',
-        'sol': [],
-        'mul_sol': '',
-        'exe_time': ''
-    }
+    # --- 6. OUTPUT ---
+    result = {'sat': 'unsat', 'sol': [], 'mul_sol': '', 'exe_time': ''}
     
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         result['sat'] = 'sat'
-        sol_list = []
-        assigned_vars = []
-        
+        current_sol_vars = []
         for s in range(instance.num_steps):
-            for u in range(instance.num_users):
+            for u in valid_users_for_step[s]:
                 if solver.Value(x[s, u]):
-                    sol_list.append(f"s{s+1}: u{u+1}")
-                    assigned_vars.append(x[s, u])
+                    result['sol'].append(f"s{s+1}: u{u+1}")
+                    current_sol_vars.append(x[s, u])
                     break
-        result['sol'] = sol_list
         
-        # Multiple Solutions Check
-        # Add blocking clause: sum of currently true variables must be < num_steps
-        model.Add(sum(assigned_vars) <= instance.num_steps - 1)
-        
+        # Double check for multiple solutions
+        model.Add(sum(current_sol_vars) < instance.num_steps)
         status2 = solver.Solve(model)
         if status2 == cp_model.OPTIMAL or status2 == cp_model.FEASIBLE:
             result['mul_sol'] = 'other solutions exist'
         else:
             result['mul_sol'] = 'this is the only solution'
-            
+    
     end_time = time.time()
-    exe_time = int((end_time - start_time) * 1000)
-    result['exe_time'] = f'{exe_time}ms'
-        
+    result['exe_time'] = str(int((end_time - start_time) * 1000)) + 'ms'
     return result
 
 def run_batch_analysis(directory="SAI/instances"):
