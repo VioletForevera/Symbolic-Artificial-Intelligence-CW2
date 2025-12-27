@@ -1210,14 +1210,17 @@ class WSPApp:
         adv_frame = tk.Frame(config_frame)
         adv_frame.pack(side=tk.TOP, fill=tk.X, pady=(5, 0))
         
-        tk.Label(adv_frame, text="Threads:", width=12, anchor="w").pack(side=tk.LEFT, padx=(0, 5))
-        self.var_threads = tk.IntVar(value=8)
-        self.scale_threads = tk.Scale(adv_frame, from_=1, to=16, orient=tk.HORIZONTAL,
-                                      variable=self.var_threads, length=100, showvalue=0)
-        self.scale_threads.pack(side=tk.LEFT)
-        self.lbl_threads_val = tk.Label(adv_frame, text="8", width=4, anchor="w")
-        self.lbl_threads_val.pack(side=tk.LEFT, padx=(0, 20))
-        self.var_threads.trace('w', lambda *args: self.lbl_threads_val.config(text=str(self.var_threads.get())))
+        # tk.Label(adv_frame, text="Threads:", width=12, anchor="w").pack(side=tk.LEFT, padx=(0, 5))
+        # self.var_threads = tk.IntVar(value=8)
+        # self.scale_threads = tk.Scale(adv_frame, from_=1, to=16, orient=tk.HORIZONTAL,
+        #                               variable=self.var_threads, length=100, showvalue=0)
+        # self.scale_threads.pack(side=tk.LEFT)
+        # self.lbl_threads_val = tk.Label(adv_frame, text="8", width=4, anchor="w")
+        # self.lbl_threads_val.pack(side=tk.LEFT, padx=(0, 20))
+        # self.var_threads.trace('w', lambda *args: self.lbl_threads_val.config(text=str(self.var_threads.get())))
+        # Using hardcoded threads instead to simplify GUI as requested
+        self.var_threads = tk.IntVar(value=8) # Keep var but don't show widget to avoid breaking other refs if any
+
         # Search Strategy
         tk.Label(adv_frame, text="Strategy:", width=8, anchor="w").pack(side=tk.LEFT, padx=(0, 5))
         self.var_strategy = tk.StringVar(value="Default")
@@ -1373,7 +1376,7 @@ class WSPApp:
         try:
             config = {
                 'algorithm': self.var_algorithm.get(),
-                'threads': self.var_threads.get(),
+                'threads': 8, # self.var_threads.get(),
                 'strategy': self.var_strategy.get(),
                 'solution_limit': self.var_sol_limit.get()
             }
