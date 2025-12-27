@@ -749,6 +749,13 @@ def SolveInstance(filename: str, progress_callback: Optional[Callable] = None, c
         return {'sat': 'error', 'sol': [], 'mul_sol': f'Parse error: {e}', 'exe_time': '0ms'}
     
     algo = config.get('algorithm', 'Auto')
+
+    # If Workload Balancing is requested, we must use CP-SAT as it's the only one supporting it.
+    if config.get('max_steps_per_user') and int(config.get('max_steps_per_user', 0)) > 0:
+        if algo == 'Auto':
+            algo = 'CP-SAT'
+            if progress_callback:
+                progress_callback({'status': 'Auto: Switched to CP-SAT for Workload Balancing...', 'time': 0})
     
     if algo == 'CP-SAT':
         if progress_callback:
@@ -828,9 +835,10 @@ class Solver_CPSAT:
             return True
         return False
 
-    def build_model(self, progress_callback=None, start_time=None):
+    def build_model(self, progress_callback=None, start_time=None, config=None):
         if self._built: return
         if start_time is None: start_time = time.time()
+        if config is None: config = {}
 
         instance = self.instance
         if progress_callback:
@@ -961,7 +969,6 @@ class Solver_CPSAT:
                         try:
                             self.model.AddLinearExpressionInDomain(get_var(s), domain_obj).OnlyEnforceIf(t_var)
                         except AttributeError:
-                             # Fallback or older ortools handling (unlikely needed for deepmind env)
                              pass 
             self.model.AddExactlyOne(t_bools)
 
@@ -988,18 +995,55 @@ class Solver_CPSAT:
             if user_vars:
                 self.model.Add(sum(user_vars) <= k)
 
+        # --- Workload Balancing Constraint ---
+        max_workload = config.get('max_steps_per_user')
+        if max_workload and int(max_workload) > 0:
+            limit = int(max_workload)
+            
+            # Map block_root -> size (number of steps)
+            block_sizes = defaultdict(int)
+            for s in range(instance.num_steps):
+                root = self._find(s)
+                block_sizes[root] += 1
+            
+            # Iterate all relevant users
+            all_users_in_domains = set()
+            for dom in block_domains.values():
+                all_users_in_domains.update(dom)
+            
+            for u in all_users_in_domains:
+                u_vars = []
+                u_coeffs = []
+                
+                # Check which blocks 'u' can perform
+                relevant_blocks = [r for r in block_domains if u in block_domains[r]]
+                
+                for r in relevant_blocks:
+                    # Create boolean: is block 'r' assigned to 'u'?
+                    b_assign = self.model.NewBoolVar(f'wl_r{r}_u{u}')
+                    self.model.Add(self.block_vars[r] == u).OnlyEnforceIf(b_assign)
+                    self.model.Add(self.block_vars[r] != u).OnlyEnforceIf(b_assign.Not())
+                    
+                    u_vars.append(b_assign)
+                    u_coeffs.append(block_sizes[r])
+                
+                if u_vars:
+                    # Generate linear expression manually to avoid MODEL_INVALID issues with WeightedSum
+                    expr = sum(v * c for v, c in zip(u_vars, u_coeffs))
+                    self.model.Add(expr <= limit)
+
         self._built = True
 
     def solve(self, filename_ignored: str = None, progress_callback: Optional[Callable] = None, config: Optional[dict[str, Any]] = None) -> dict[str, Any]:
         # 'filename_ignored' kept for signature compatibility if called with positional args, but we use self.instance
+        if config is None: config = {}
         start_time = time.time()
-        self.build_model(progress_callback, start_time)
+        self.build_model(progress_callback, start_time, config)
         
         if self.early_result:
              self.early_result['exe_time'] = f"{int((time.time() - start_time) * 1000)}ms"
              return self.early_result
 
-        if config is None: config = {}
         solver = cp_model.CpSolver()
         timeout = config.get('timeout', 30)
         threads = config.get('threads', 8)
@@ -1043,8 +1087,9 @@ class Solver_CPSAT:
         if progress_callback: progress_callback({'status': 'Finished', 'time': time.time() - start_time})
         return result
 
-    def solve_for_api(self):
-        self.build_model()
+    def solve_for_api(self, **kwargs):
+        # Pass kwargs as config
+        self.build_model(config=kwargs)
         if self.early_result:
             return None, cp_model.INFEASIBLE, False
 
@@ -1234,6 +1279,19 @@ class WSPApp:
         self.spn_sol_limit = tk.Spinbox(adv_frame, from_=1, to=100, textvariable=self.var_sol_limit, width=5)
         self.spn_sol_limit.pack(side=tk.LEFT)
 
+        # --- Workload Balancing (New) ---
+        wl_frame = tk.Frame(config_frame)
+        wl_frame.pack(side=tk.TOP, fill=tk.X, pady=(5, 0))
+        
+        self.var_enable_workload = tk.IntVar(value=0)
+        self.chk_workload = tk.Checkbutton(wl_frame, text="Enable Max Workload Constraint", variable=self.var_enable_workload)
+        self.chk_workload.pack(side=tk.LEFT, padx=(0, 5))
+        
+        self.var_workload_limit = tk.IntVar(value=5)
+        self.spn_workload = tk.Spinbox(wl_frame, from_=1, to=100, textvariable=self.var_workload_limit, width=5)
+        self.spn_workload.pack(side=tk.LEFT)
+        tk.Label(wl_frame, text="(tasks per user)").pack(side=tk.LEFT)
+
         # --- Middle Frame: Actions ---
         action_frame = tk.Frame(self.tab_solver, pady=10)
         action_frame.pack(side=tk.TOP, fill=tk.X, padx=10)
@@ -1380,6 +1438,11 @@ class WSPApp:
                 'strategy': self.var_strategy.get(),
                 'solution_limit': self.var_sol_limit.get()
             }
+            
+            if self.var_enable_workload.get() == 1:
+                val = self.var_workload_limit.get()
+                config['max_steps_per_user'] = val
+                self._safe_print(f"Option: Max Workload <= {val}\n")
             
             self._safe_print(f"\n⚙️ Configuration: {config['algorithm']}, Limit: {config['solution_limit']}\n")
             
