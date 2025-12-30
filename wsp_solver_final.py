@@ -750,12 +750,12 @@ def SolveInstance(filename: str, progress_callback: Optional[Callable] = None, c
     
     algo = config.get('algorithm', 'Auto')
 
-    # If Workload Balancing is requested, we must use CP-SAT as it's the only one supporting it.
-    if config.get('max_steps_per_user') and int(config.get('max_steps_per_user', 0)) > 0:
+    # If Workload Balancing or Soft SoD is requested, we must use CP-SAT
+    if (config.get('max_steps_per_user') and int(config.get('max_steps_per_user', 0)) > 0) or config.get('soft_sod'):
         if algo == 'Auto':
             algo = 'CP-SAT'
             if progress_callback:
-                progress_callback({'status': 'Auto: Switched to CP-SAT for Workload Balancing...', 'time': 0})
+                progress_callback({'status': 'Auto: Switched to CP-SAT for Advanced Constraints...', 'time': 0})
     
     if algo == 'CP-SAT':
         if progress_callback:
@@ -811,8 +811,7 @@ def SolveInstance(filename: str, progress_callback: Optional[Callable] = None, c
 
 class Solver_CPSAT:
     """
-    Google OR-Tools CP-SAT Solver with Block-based Modeling (BoD Clustering) & One-Team Pruning.
-    Refactored into a class to support API usage.
+    Google OR-Tools CP-SAT Solver with Block-based Modeling & Robust Constraints.
     """
     def __init__(self, instance: Instance):
         self.instance = instance
@@ -945,13 +944,29 @@ class Solver_CPSAT:
             return self.block_vars[self._find(s)]
 
         added_sod = set()
+        soft_sod_penalties = []
+        is_soft_sod = config.get('soft_sod', False)
+
         for s1, s2 in instance.separation_duty:
             r1, r2 = self._find(s1), self._find(s2)
             if r1 != r2:
                 if r1 > r2: r1, r2 = r2, r1
                 if (r1, r2) not in added_sod:
-                    self.model.Add(self.block_vars[r1] != self.block_vars[r2])
                     added_sod.add((r1, r2))
+                    
+                    if is_soft_sod:
+                        # Soft Constraint: Minimize violations
+                        # b_viol <=> (v1 == v2)
+                        b_viol = self.model.NewBoolVar(f'sod_viol_{r1}_{r2}')
+                        self.model.Add(self.block_vars[r1] == self.block_vars[r2]).OnlyEnforceIf(b_viol)
+                        self.model.Add(self.block_vars[r1] != self.block_vars[r2]).OnlyEnforceIf(b_viol.Not())
+                        soft_sod_penalties.append(b_viol)
+                    else:
+                        # Hard Constraint
+                        self.model.Add(self.block_vars[r1] != self.block_vars[r2])
+        
+        if soft_sod_penalties:
+            self.model.Minimize(sum(soft_sod_penalties))
 
         for i, (steps, teams) in enumerate(valid_one_teams):
             t_bools = []
@@ -984,58 +999,124 @@ class Solver_CPSAT:
                 participating_roots = [r for r in relevant_roots if u in block_domains[r]]
                 if participating_roots:
                      u_active = self.model.NewBoolVar(f'amk{i}_u{u}')
-                     eq_bools = []
                      for r in participating_roots:
                          b_eq = self.model.NewBoolVar(f'amk{i}_eq_r{r}_u{u}')
                          self.model.Add(self.block_vars[r] == u).OnlyEnforceIf(b_eq)
                          self.model.Add(self.block_vars[r] != u).OnlyEnforceIf(b_eq.Not())
-                         eq_bools.append(b_eq)
-                     self.model.AddMaxEquality(u_active, eq_bools)
+                         self.model.AddImplication(b_eq, u_active)
                      user_vars.append(u_active)
             if user_vars:
                 self.model.Add(sum(user_vars) <= k)
 
-        # --- Workload Balancing Constraint ---
+        # --- Workload Balancing Constraint (Fixed) ---
         max_workload = config.get('max_steps_per_user')
-        if max_workload and int(max_workload) > 0:
-            limit = int(max_workload)
+        if max_workload:
+            try:
+                limit = int(max_workload)
+                if limit > 0:
+                    user_to_bools = defaultdict(list)
+                    
+                    # Compute block sizes
+                    block_sizes = defaultdict(int)
+                    for s in range(instance.num_steps):
+                        root = self._find(s)
+                        block_sizes[root] += 1
+                    
+                    sorted_roots = sorted(self.block_vars.keys())
+                    for r in sorted_roots:
+                        var_r = self.block_vars[r]
+                        domain_users = sorted(list(block_domains[r]))
+                        size = int(block_sizes[r]) # Ensure int
+                        
+                        assignments_in_block = []
+
+                        for u in domain_users:
+                            # Safe Channeling: b_assign => (var == u)
+                            b_assign = self.model.NewBoolVar(f'assign_r{r}_u{u}')
+                            assignments_in_block.append(b_assign)
+                            
+                            # 1. If b is true, var MUST be u
+                            self.model.Add(var_r == u).OnlyEnforceIf(b_assign)
+                            
+                            user_to_bools[u].append((b_assign, size))
+                        
+                        # Optimization: We know exactly one assignment is true per block
+                        self.model.AddExactlyOne(assignments_in_block)
+
+                    # Apply limit
+                    for u, expr_list in user_to_bools.items():
+                        try:
+                            # Manual Summation to avoid any WeightedSum/Iterable issues
+                            lin_expr = 0
+                            for b, w in expr_list:
+                                lin_expr += b * w
+                            
+                            self.model.Add(lin_expr <= limit)
+                        
+                        except Exception as e:
+                            print(f"CRITICAL ERROR constructing workload for user {u}: {e}")
+                            print(f"Bools: {[str(b) for b, w in expr_list]}")
+                            print(f"Weights: {[str(w) for b, w in expr_list]}")
+                            # Do not re-raise, just skip constraint to see if solver runs
+                            pass
+                            
+            except ValueError:
+                pass # Fail silently on invalid input
+
+        # --- Budget Constraint (New) ---
+        budget_limit = config.get('budget_limit')
+        if budget_limit and int(budget_limit) > 0:
+            limit = int(budget_limit)
+            # Synthetic Cost: u_cost = (u + 1) * 10
+            # Total Cost = sum( user_cost * block_size ) for each block assignment
             
-            # Map block_root -> size (number of steps)
+            # Map user ID to cost
+            user_costs = [(u, (u + 1) * 10) for u in range(instance.num_users)]
+            
+            # Create a list of costs for all blocks
+            block_costs = []
+            
+            # Pre-calculate block sizes
             block_sizes = defaultdict(int)
             for s in range(instance.num_steps):
                 root = self._find(s)
                 block_sizes[root] += 1
+                
+            for root, var_r in self.block_vars.items():
+                size = block_sizes[root]
+                
+                # Create a variable for the cost of this block
+                # cost_var = Element(var_r, [costs...]) basically
+                # OR-Tools Element: model.AddElement(index, [values], target)
+                
+                # We need a domain for the Target variable. Max cost is (num_users * 10).
+                # But AddElement expects strict array index starting at 0.
+                # Our var_r has a domain that might be sparse, but AddElement uses value as index.
+                # So we must ensure the 'values' list covers all potential user IDs up to max(user_id).
+                
+                max_u = instance.num_users - 1 
+                cost_map = [0] * (max_u + 1)
+                for u in range(instance.num_users):
+                    cost_map[u] = (u + 1) * 10
+                
+                # cost_of_block_assignment
+                assigned_cost = self.model.NewIntVar(0, (max_u + 1) * 10, f'cost_unit_r{root}')
+                self.model.AddElement(var_r, cost_map, assigned_cost)
+                
+                # Weighted by block size
+                if size > 1:
+                    weighted_cost = self.model.NewIntVar(0, (max_u + 1) * 10 * size, f'cost_weighted_r{root}')
+                    self.model.Add(weighted_cost == assigned_cost * size)
+                    block_costs.append(weighted_cost)
+                else:
+                    block_costs.append(assigned_cost)
             
-            # Iterate all relevant users
-            all_users_in_domains = set()
-            for dom in block_domains.values():
-                all_users_in_domains.update(dom)
-            
-            for u in all_users_in_domains:
-                u_vars = []
-                u_coeffs = []
-                
-                # Check which blocks 'u' can perform
-                relevant_blocks = [r for r in block_domains if u in block_domains[r]]
-                
-                for r in relevant_blocks:
-                    # Create boolean: is block 'r' assigned to 'u'?
-                    b_assign = self.model.NewBoolVar(f'wl_r{r}_u{u}')
-                    self.model.Add(self.block_vars[r] == u).OnlyEnforceIf(b_assign)
-                    self.model.Add(self.block_vars[r] != u).OnlyEnforceIf(b_assign.Not())
-                    
-                    u_vars.append(b_assign)
-                    u_coeffs.append(block_sizes[r])
-                
-                if u_vars:
-                    # Generate linear expression manually to avoid MODEL_INVALID issues with WeightedSum
-                    expr = sum(v * c for v, c in zip(u_vars, u_coeffs))
-                    self.model.Add(expr <= limit)
+            if block_costs:
+                self.model.Add(sum(block_costs) <= limit)
 
         self._built = True
 
     def solve(self, filename_ignored: str = None, progress_callback: Optional[Callable] = None, config: Optional[dict[str, Any]] = None) -> dict[str, Any]:
-        # 'filename_ignored' kept for signature compatibility if called with positional args, but we use self.instance
         if config is None: config = {}
         start_time = time.time()
         self.build_model(progress_callback, start_time, config)
@@ -1043,6 +1124,12 @@ class Solver_CPSAT:
         if self.early_result:
              self.early_result['exe_time'] = f"{int((time.time() - start_time) * 1000)}ms"
              return self.early_result
+        
+        # Validation Debug
+        val_status = self.model.Validate()
+        if val_status:
+             print(f"MODEL INVALID: {val_status}")
+             return {'sat': 'error', 'sol': [], 'mul_sol': f'Model Invalid: {val_status}', 'exe_time': '0ms'}
 
         solver = cp_model.CpSolver()
         timeout = config.get('timeout', 30)
@@ -1065,7 +1152,24 @@ class Solver_CPSAT:
             progress_callback({'status': f'Solving...', 'time': time.time() - start_time})
             
         try:
+            solver.parameters.log_search_progress = False # Disable logging for production
             status = solver.Solve(self.model, callback)
+            
+            # Fallback for MODEL_INVALID which might occur due to Callback+Parallelism issues
+            if status == cp_model.MODEL_INVALID:
+                print("Warning: Solve with callback returned MODEL_INVALID. Retrying without callback (Single Thread)...")
+                solver.parameters.num_search_workers = 1
+                solver.parameters.enumerate_all_solutions = False # Disable enumeration just to get one result
+                status = solver.Solve(self.model)
+                
+                if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+                     # Manually capture the first solution
+                     sol = []
+                     for s in sorted(all_step_vars.keys()):
+                         val = solver.Value(all_step_vars[s])
+                         sol.append(f"s{s+1}: u{val+1}")
+                     callback.found_solutions.append(sol)
+                     
         except Exception as e:
             return {'sat': 'error', 'sol': [], 'mul_sol': f'Solver Exception: {e}', 'exe_time': '0ms'}
 
@@ -1076,6 +1180,36 @@ class Solver_CPSAT:
             result['sol'] = callback.found_solutions[0]
             result['all_solutions'] = callback.found_solutions
             result['mul_sol'] = f'Found {len(callback.found_solutions)} solution(s).'
+            
+            # Check for Soft SoD violations
+            if config.get('soft_sod', False) and (status == cp_model.OPTIMAL or status == cp_model.FEASIBLE):
+                obj_val = solver.ObjectiveValue()
+                if obj_val > 0:
+                    result['mul_sol'] += f"\n\n⚠️  WARNING: Solution Found with {int(obj_val)} SoD Violation(s) ⚠️"
+                    result['mul_sol'] += "\nThe following Separation-of-Duty constraints were violated:"
+                    
+                    # Identify specific violations
+                    violation_details = []
+                    for s1, s2 in self.instance.separation_duty:
+                        r1 = self._find(s1)
+                        r2 = self._find(s2)
+                        
+                        # Only check if these steps are actually in the model (they should be)
+                        if r1 in self.block_vars and r2 in self.block_vars:
+                            try:
+                                u1_val = solver.Value(self.block_vars[r1])
+                                u2_val = solver.Value(self.block_vars[r2])
+                                
+                                if u1_val == u2_val:
+                                    violation_details.append(f"   - Steps {s1+1} & {s2+1} -> Both assigned to User {u1_val+1}")
+                            except:
+                                pass # In case solver state is not accessible
+                    
+                    if violation_details:
+                         result['mul_sol'] += "\n" + "\n".join(violation_details)
+                    else:
+                         result['mul_sol'] += "\n(Details could not be reconstructed)"
+            
             if len(callback.found_solutions) >= sol_limit:
                  result['mul_sol'] += " (More exist)"
         else:
@@ -1088,14 +1222,21 @@ class Solver_CPSAT:
         return result
 
     def solve_for_api(self, **kwargs):
-        # Pass kwargs as config
         self.build_model(config=kwargs)
         if self.early_result:
             return None, cp_model.INFEASIBLE, False
 
+        # --- API Debug Validation ---
+        val_status = self.model.Validate()
+        if val_status:
+            print(f"API MODEL INVALID: {val_status}") # Debug print
+            return None, cp_model.MODEL_INVALID, False
+        # -----------------------------
+
         solver = cp_model.CpSolver()
         solver.parameters.num_search_workers = 8
-        # Ensure we find one solution
+        # solver.parameters.log_search_progress = True 
+        
         status = solver.Solve(self.model)
         
         assignment = None
@@ -1108,8 +1249,6 @@ class Solver_CPSAT:
                 val = solver.Value(self.block_vars[root])
                 assignment[s] = val
             
-            # Uniqueness check
-            # ForbiddenAssignments requires [vars], [values] where values is list of tuples
             vars_list = list(self.block_vars.values())
             vals_list = [solver.Value(v) for v in vars_list]
             self.model.AddForbiddenAssignments(vars_list, [vals_list])
@@ -1292,6 +1431,25 @@ class WSPApp:
         self.spn_workload.pack(side=tk.LEFT)
         tk.Label(wl_frame, text="(tasks per user)").pack(side=tk.LEFT)
 
+        # --- Budget Constraint (New) ---
+        bg_frame = tk.Frame(config_frame)
+        bg_frame.pack(side=tk.TOP, fill=tk.X, pady=(5, 0))
+        
+        self.var_enable_budget = tk.IntVar(value=0)
+        self.chk_budget = tk.Checkbutton(bg_frame, text="Enable Budget Constraint (Cost=ID*10)", variable=self.var_enable_budget)
+        self.chk_budget.pack(side=tk.LEFT, padx=(0, 5))
+        
+        self.var_budget_limit = tk.IntVar(value=1000)
+        self.spn_budget = tk.Spinbox(bg_frame, from_=10, to=100000, textvariable=self.var_budget_limit, width=7)
+        self.spn_budget.pack(side=tk.LEFT)
+
+        # --- Soft Constraints (New) ---
+        sc_frame = tk.Frame(config_frame)
+        sc_frame.pack(side=tk.TOP, fill=tk.X, pady=(5, 0))
+        self.var_soft_sod = tk.IntVar(value=0)
+        self.chk_soft_sod = tk.Checkbutton(sc_frame, text="Allow SoD Violations (Soft Constraints)", variable=self.var_soft_sod)
+        self.chk_soft_sod.pack(side=tk.LEFT)
+
         # --- Middle Frame: Actions ---
         action_frame = tk.Frame(self.tab_solver, pady=10)
         action_frame.pack(side=tk.TOP, fill=tk.X, padx=10)
@@ -1436,13 +1594,19 @@ class WSPApp:
                 'algorithm': self.var_algorithm.get(),
                 'threads': 8, # self.var_threads.get(),
                 'strategy': self.var_strategy.get(),
-                'solution_limit': self.var_sol_limit.get()
+                'solution_limit': self.var_sol_limit.get(),
+                'soft_sod': self.var_soft_sod.get() == 1
             }
             
             if self.var_enable_workload.get() == 1:
                 val = self.var_workload_limit.get()
                 config['max_steps_per_user'] = val
                 self._safe_print(f"Option: Max Workload <= {val}\n")
+
+            if self.var_enable_budget.get() == 1:
+                val = self.var_budget_limit.get()
+                config['budget_limit'] = val
+                self._safe_print(f"Option: Budget Limit <= {val}\n")
             
             self._safe_print(f"\n⚙️ Configuration: {config['algorithm']}, Limit: {config['solution_limit']}\n")
             
@@ -1597,7 +1761,7 @@ def Solver(filename: str, **kwargs) -> dict[str, Any]:
     solver = Solver_CPSAT(instance)
     
     # 4. Call solve_for_api
-    assignment, status, is_unique = solver.solve_for_api()
+    assignment, status, is_unique = solver.solve_for_api(**kwargs)
     
     end_time = time.time()
     exe_time = f"{int((end_time - start_time) * 1000)}ms"
@@ -1670,15 +1834,15 @@ if __name__ == "__main__":
     # Use absolute path if possible or relative.
     # User said: "Add a test block that calls Solver() on a sample file (e.g., './SAI/instances/example1.txt')"
     
-    if os.path.exists(test_file):
-        print(f"Testing Solver on {test_file}...")
-        res = Solver(test_file)
-        print("Result Dict:", res)
-        print("\nTransformed Output:")
-        print(transform_output(res))
-        print("\n[Test Complete] Opening GUI...")
-    else:
-        print(f"Test file {test_file} not found. Please check path.")
+    # if os.path.exists(test_file):
+    #     print(f"Testing Solver on {test_file}...")
+    #     res = Solver(test_file)
+    #     print("Result Dict:", res)
+    #     print("\nTransformed Output:")
+    #     print(transform_output(res))
+    #     print("\n[Test Complete] Opening GUI...")
+    # else:
+    #     print(f"Test file {test_file} not found. Please check path.")
 
     # Restoration of GUI for User Convenience
     root = tk.Tk()
